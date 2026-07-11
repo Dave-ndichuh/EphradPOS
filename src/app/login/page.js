@@ -118,7 +118,7 @@ export default function LoginPage() {
                 type="email"
                 className="input"
                 style={{ paddingLeft: '2.5rem', height: '48px' }}
-                placeholder="admin@jobea.co.ke"
+                placeholder="admin@ephrad.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

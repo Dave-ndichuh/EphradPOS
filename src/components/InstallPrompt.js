@@ -103,7 +103,7 @@ export default function InstallPrompt() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingRight: '1rem' }}>
           <img src="/logo.png" alt="App Icon" style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover', background: '#fff' }} />
           <div>
-            <h4 style={{ margin: '0 0 0.25rem 0', fontWeight: 600, color: 'var(--foreground)' }}>Install Jobea POS</h4>
+            <h4 style={{ margin: '0 0 0.25rem 0', fontWeight: 600, color: 'var(--foreground)' }}>Install Ephrad POS</h4>
             <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--muted-foreground)' }}>Add to home screen for faster access.</p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 {
-  "name": "Jobea Auto Spares",
-  "short_name": "Jobea POS",
-  "description": "Jobea Auto Spares POS and Management System",
+  "name": "Ephrad POS",
+  "short_name": "Ephrad POS",
+  "description": "Ephrad Enterprises POS and Management System",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
