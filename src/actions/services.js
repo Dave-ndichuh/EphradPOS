@@ -4,8 +4,8 @@ import prisma from '@/lib/prisma';
 
 export async function getServicesData(role, employeeId) {
   try {
-    const where = (role === 'employee' && employeeId) 
-      ? { EMPLOYEE_ID: employeeId }
+    const where = (role === 'staff' && employeeId) 
+      ? { EMPLOYEE_ID: parseInt(employeeId, 10) }
       : {};
 
     const [services, customers, employees, products] = await Promise.all([

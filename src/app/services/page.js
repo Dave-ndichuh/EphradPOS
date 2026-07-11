@@ -193,7 +193,7 @@ export default function ServicesPage() {
 
   return (
     <div className="animate-fade-in">
-      {role === 'employee' && pendingAssignments.length > 0 && (
+      {role === 'staff' && pendingAssignments.length > 0 && (
         <div className="glass" style={{ borderLeft: '4px solid #f59e0b', padding: '1.5rem', marginBottom: '2rem' }}>
           <h3 className="heading-2" style={{ margin: 0, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <AlertTriangle size={20} /> You have {pendingAssignments.length} new service assignment(s)
@@ -227,10 +227,12 @@ export default function ServicesPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => openModal()}>
-          <Plus size={18} />
-          New Service
-        </button>
+        {role !== 'staff' && (
+          <button className="btn btn-primary" onClick={() => openModal()}>
+            <Plus size={18} />
+            New Service
+          </button>
+        )}
       </div>
 
       <div className="glass table-wrapper">
@@ -275,9 +277,11 @@ export default function ServicesPage() {
                       <button className="btn btn-secondary" style={{ padding: '0.5rem' }} title="Edit" onClick={() => openModal(srv)}>
                         <Edit size={16} />
                       </button>
-                      <button className="btn btn-destructive" style={{ padding: '0.5rem' }} title="Delete" onClick={() => handleDelete(srv.SERVICE_ID)}>
-                        <Trash2 size={16} />
-                      </button>
+                      {role !== 'staff' && (
+                        <button className="btn btn-destructive" style={{ padding: '0.5rem' }} title="Delete" onClick={() => handleDelete(srv.SERVICE_ID)}>
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -294,14 +298,14 @@ export default function ServicesPage() {
           background: 'rgba(0,0,0,0.6)', 
           backdropFilter: 'blur(4px)', 
           display: 'flex', 
-          alignItems: role === 'employee' ? 'center' : 'flex-start', 
+          alignItems: role === 'staff' ? 'center' : 'flex-start', 
           justifyContent: 'center', 
           zIndex: 9999, 
-          padding: role === 'employee' ? '1rem' : '5rem 2rem 2rem 2rem', 
+          padding: role === 'staff' ? '1rem' : '5rem 2rem 2rem 2rem', 
           overflowY: 'auto' 
         }}>
           
-          {role === 'employee' ? (
+          {role === 'staff' ? (
             // EMPLOYEE SIMPLIFIED OVERLAY
             <div className="glass" style={{ width: '100%', maxWidth: '550px', display: 'flex', flexDirection: 'column', background: 'var(--background)', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border)' }}>

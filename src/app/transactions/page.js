@@ -364,10 +364,10 @@ function TransactionsContent() {
                       >
                         <option value="">Actions...</option>
                         <option value="print">Print Receipt</option>
-                        {(!trans.IS_SETTLED && trans.PAYMENT_METHOD === 'Pending Payment' && trans.status !== 'Reversed' && role !== 'employee') && (
+                        {(!trans.IS_SETTLED && trans.PAYMENT_METHOD === 'Pending Payment' && trans.status !== 'Reversed' && role !== 'staff') && (
                           <option value="settle">Settle Payment</option>
                         )}
-                        {(trans.status !== 'Reversed' && role !== 'employee') && (
+                        {(trans.status !== 'Reversed' && role !== 'staff') && (
                           <option value="reverse">Reverse Transaction</option>
                         )}
                       </select>

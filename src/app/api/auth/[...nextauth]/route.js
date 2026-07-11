@@ -37,50 +37,49 @@ const handler = NextAuth({
           throw new Error('Email and password required');
         }
 
-        // Find employee by email
+        // 1. Check if the user exists in the employee table first
         const employee = await prisma.employee.findFirst({
           where: { EMAIL: credentials.email },
           include: { users: true },
         });
 
-        if (!employee) {
-          // Fallback to checking username if email isn't found
-          const user = await prisma.users.findFirst({
-            where: { USERNAME: credentials.email },
-            include: { employee: true },
-          });
-
-          if (!user || user.PASSWORD !== credentials.password) {
-            throw new Error('Invalid credentials');
+        if (employee) {
+          // If it's an employee, verify their password if they have a linked user account
+          const user = employee.users[0];
+          
+          if (!user) {
+            // If they don't have a linked user account, they can't login via email/password right now
+            throw new Error('No user account linked to this employee');
           }
 
+          if (user.PASSWORD !== credentials.password) {
+            throw new Error('Invalid password');
+          }
+
+          // Employees always get the "staff" role
           return {
-            id: user.ID.toString(),
-            name: user.USERNAME,
-            email: user.employee?.EMAIL || credentials.email,
-            role: user.TYPE_ID === 1 ? 'admin' : 'staff', // Assuming 1 is admin
+            id: employee.EMPLOYEE_ID.toString(),
+            name: (employee.FIRST_NAME || '') + ' ' + (employee.LAST_NAME || ''),
+            email: employee.EMAIL,
+            role: 'staff',
           };
         }
 
-        // Assuming 1-to-1 relationship for employee -> users
-        const user = employee.users[0];
+        // 2. If not an employee, check the users table directly (Admin fallback)
+        const adminUser = await prisma.users.findFirst({
+          where: { USERNAME: credentials.email }, // Using USERNAME field for admin logins
+        });
 
-        if (!user) {
-          throw new Error('User account not found for this employee');
+        if (!adminUser || adminUser.PASSWORD !== credentials.password) {
+          throw new Error('Invalid credentials');
         }
 
-        // Validate password (plain text for now based on reverse-engineered schema)
-        const isValid = user.PASSWORD === credentials.password;
-
-        if (!isValid) {
-          throw new Error('Invalid password');
-        }
-
+        // Distinct users not linked to the employee table get the "admin" role
         return {
-          id: user.ID.toString(),
-          name: employee.FIRST_NAME + ' ' + employee.LAST_NAME,
-          email: employee.EMAIL,
-          role: user.TYPE_ID === 1 ? 'admin' : 'staff',
+          id: adminUser.ID.toString(),
+          name: adminUser.USERNAME,
+          email: adminUser.USERNAME, // Use username as email placeholder for admin
+          role: 'admin',
         };
       },
     }),

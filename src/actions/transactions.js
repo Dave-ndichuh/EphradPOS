@@ -6,8 +6,8 @@ import { formatTransId } from '@/utils/formatters';
 
 export async function getTransactions(employeeId, role) {
   try {
-    const where = (role === 'employee' && employeeId) 
-      ? { EMPLOYEE_ID: employeeId }
+    const where = (role === 'staff' && employeeId) 
+      ? { EMPLOYEE_ID: parseInt(employeeId, 10) }
       : {};
 
     const data = await prisma.transaction.findMany({

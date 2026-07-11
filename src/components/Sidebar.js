@@ -80,7 +80,7 @@ export default function Sidebar() {
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
-  if (role === 'employee') {
+  if (role === 'staff') {
     navItems = [
       { name: 'Point of Sale', path: '/pos', icon: ShoppingCart },
       { name: 'Invoices', path: '/invoices', icon: FileSpreadsheet },
