@@ -32,7 +32,7 @@ export default function Topbar() {
         {/* Hamburger Menu (visible only on small screens) */}
         <button 
           onClick={toggleSidebar}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.5rem', color: 'var(--foreground)' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.5rem', color: 'var(--card-foreground)' }}
           className="mobile-menu-btn"
         >
           <Menu size={20} />
@@ -49,7 +49,7 @@ export default function Topbar() {
         {/* Refresh Button */}
         <button 
           onClick={() => window.location.reload()}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '50%', width: '36px', height: '36px', color: 'var(--foreground)', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '50%', width: '36px', height: '36px', color: 'var(--card-foreground)', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }}
           title="Refresh App"
           onMouseEnter={(e) => e.currentTarget.style.transform = 'rotate(15deg)'}
           onMouseLeave={(e) => e.currentTarget.style.transform = 'rotate(0deg)'}

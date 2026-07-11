@@ -105,7 +105,7 @@ export default function CreditSalesTable() {
   if (creditSales.length === 0) {
     return (
       <div className="glass" style={{ padding: '3rem', textAlign: 'center', color: 'var(--muted-foreground)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-        <CheckCircle size={48} style={{ color: '#10b981', opacity: 0.5 }} />
+        <CheckCircle size={48} style={{ color: 'var(--color-accent)', opacity: 0.5 }} />
         <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: 500 }}>No active credit sales. All debts are settled!</p>
       </div>
     );
@@ -152,7 +152,7 @@ export default function CreditSalesTable() {
                 <td style={{ textAlign: 'right' }}>
                   <button 
                     className="btn btn-primary" 
-                    style={{ padding: '0.5rem 1rem', background: '#10b981', color: '#fff', border: 'none', transition: 'transform 0.1s' }}
+                    style={{ padding: '0.5rem 1rem', background: 'var(--color-primary)', color: '#fff', border: 'none', transition: 'transform 0.1s' }}
                     onClick={() => openSettlementModal(sale)}
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -179,7 +179,7 @@ export default function CreditSalesTable() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 className="heading-2" style={{ margin: 0, fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <DollarSign size={20} color="#10b981" /> 
+                <DollarSign size={20} color="var(--color-accent)" /> 
                 Settle Credit
               </h3>
               <button onClick={() => setSettlingSale(null)} style={{ color: 'var(--muted-foreground)', cursor: 'pointer', background: 'transparent', border: 'none' }}>
@@ -206,9 +206,9 @@ export default function CreditSalesTable() {
                       style={{
                         padding: '0.75rem',
                         borderRadius: '8px',
-                        border: `1px solid ${settlementMode === mode ? (mode === 'Return' ? '#ef4444' : 'var(--primary)') : 'var(--border)'}`,
+                        border: `1px solid ${settlementMode === mode ? (mode === 'Return' ? 'var(--color-secondary)' : 'var(--color-primary)') : 'var(--border)'}`,
                         background: settlementMode === mode ? (mode === 'Return' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)') : 'transparent',
-                        color: settlementMode === mode ? (mode === 'Return' ? '#ef4444' : 'var(--primary)') : 'var(--muted-foreground)',
+                        color: settlementMode === mode ? (mode === 'Return' ? 'var(--color-secondary)' : 'var(--color-primary)') : 'var(--muted-foreground)',
                         fontWeight: settlementMode === mode ? 600 : 400,
                         cursor: 'pointer',
                         transition: 'all 0.2s'
@@ -245,7 +245,7 @@ export default function CreditSalesTable() {
 
               <div style={{ marginTop: '0.5rem', display: 'flex', gap: '1rem' }}>
                 <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setSettlingSale(null)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1, background: settlementMode === 'Return' ? '#ef4444' : '#10b981' }} disabled={isProcessing}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, background: settlementMode === 'Return' ? 'var(--color-secondary)' : 'var(--color-primary)' }} disabled={isProcessing}>
                   {isProcessing ? <Loader2 size={18} className="animate-spin" /> : 'Confirm'}
                 </button>
               </div>
