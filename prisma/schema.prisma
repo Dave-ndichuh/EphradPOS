@@ -1,0 +1,180 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model category {
+  CATEGORY_ID Int       @id @default(autoincrement())
+  CNAME       String?   @db.VarChar(50)
+  products    product[]
+}
+
+model location {
+  LOCATION_ID Int        @id @default(autoincrement())
+  PROVINCE    String?    @db.VarChar(100)
+  CITY        String?    @db.VarChar(100)
+  employees   employee[]
+  suppliers   supplier[]
+}
+
+model job {
+  JOB_ID    Int        @id @default(autoincrement())
+  JOB_TITLE String?    @db.VarChar(50)
+  employees employee[]
+}
+
+model employee {
+  EMPLOYEE_ID  Int       @id @default(autoincrement())
+  FIRST_NAME   String?   @db.VarChar(50)
+  LAST_NAME    String?   @db.VarChar(50)
+  GENDER       String?   @db.VarChar(50)
+  EMAIL        String?   @db.VarChar(100)
+  PHONE_NUMBER String?   @unique @db.VarChar(11)
+  JOB_ID       Int?
+  LOCATION_ID  Int?
+  job          job?      @relation(fields: [JOB_ID], references: [JOB_ID])
+  location     location? @relation(fields: [LOCATION_ID], references: [LOCATION_ID])
+  users        users[]
+  services     service[]
+}
+
+model type {
+  TYPE_ID Int     @id @default(autoincrement())
+  TYPE    String? @db.VarChar(50)
+  users   users[]
+}
+
+model users {
+  ID          Int       @id @default(autoincrement())
+  EMPLOYEE_ID Int?
+  USERNAME    String?   @db.VarChar(50)
+  PASSWORD    String?   @db.VarChar(50)
+  TYPE_ID     Int?
+  employee    employee? @relation(fields: [EMPLOYEE_ID], references: [EMPLOYEE_ID])
+  type        type?     @relation(fields: [TYPE_ID], references: [TYPE_ID])
+}
+
+model supplier {
+  SUPPLIER_ID  Int       @id @default(autoincrement())
+  COMPANY_NAME String?   @db.VarChar(50)
+  LOCATION_ID  Int?
+  PHONE_NUMBER String?   @db.VarChar(11)
+  location     location? @relation(fields: [LOCATION_ID], references: [LOCATION_ID])
+  products     product[]
+}
+
+model product {
+  PRODUCT_ID        Int       @id @default(autoincrement())
+  PRODUCT_CODE      String    @db.VarChar(20)
+  NAME              String?   @db.VarChar(50)
+  DESCRIPTION       String?   @db.VarChar(250)
+  QTY_STOCK         Int?
+  ON_HAND           Int       @default(0)
+  PRICE             Int?
+  CATEGORY_ID       Int?
+  SUPPLIER_ID       Int?
+  DATE_STOCK_IN     String?   @db.VarChar(50)
+  STATUS            String?   @default("active") @db.VarChar(20)
+  UOM               String?   @default("pcs") @db.VarChar(20)
+  REORDER_THRESHOLD Int?      @default(5)
+  COST_PRICE        Int?      @default(0)
+  BARCODE           String?   @db.VarChar(50)
+  IMAGE_URL         String?   @db.VarChar(255)
+  TAX_RATE          Decimal?  @default(16.0) @db.Decimal
+  BRAND             String?   @db.VarChar(100)
+  MODEL             String?   @db.VarChar(100)
+  WEIGHT            String?   @db.VarChar(50)
+  category          category? @relation(fields: [CATEGORY_ID], references: [CATEGORY_ID])
+  supplier          supplier? @relation(fields: [SUPPLIER_ID], references: [SUPPLIER_ID])
+  service_details   service_details[]
+  invoice_details   invoice_details[]
+}
+
+model customer {
+  CUST_ID      Int           @id @default(autoincrement())
+  FIRST_NAME   String?       @db.VarChar(50)
+  LAST_NAME    String?       @db.VarChar(50)
+  PHONE_NUMBER String?       @db.VarChar(11)
+  transactions transaction[]
+  services     service[]
+  invoices     invoice[]
+}
+
+model transaction_details {
+  ID         Int    @id @default(autoincrement())
+  TRANS_D_ID String @db.VarChar(250)
+  PRODUCTS   String @db.VarChar(250)
+  QTY        String @db.VarChar(250)
+  PRICE      String @db.VarChar(250)
+  EMPLOYEE   String @db.VarChar(250)
+  ROLE       String @db.VarChar(250)
+}
+
+model transaction {
+  TRANS_ID   Int       @id @default(autoincrement())
+  CUST_ID    Int?
+  NUMOFITEMS String    @db.VarChar(250)
+  SUBTOTAL   String    @db.VarChar(50)
+  LESSVAT    String    @db.VarChar(50)
+  NETVAT     String    @db.VarChar(50)
+  ADDVAT     String    @db.VarChar(50)
+  GRANDTOTAL String    @db.VarChar(250)
+  CASH       String    @db.VarChar(250)
+  DATE       String    @db.VarChar(50)
+  TRANS_D_ID String    @db.VarChar(250)
+  INVOICE_ID String?   @db.VarChar(50)
+  customer   customer? @relation(fields: [CUST_ID], references: [CUST_ID])
+}
+
+model invoice {
+  INVOICE_ID      Int               @id @default(autoincrement())
+  CUST_ID         Int?
+  STATUS          String?           @default("Unpaid") @db.VarChar(50)
+  TOTAL_AMOUNT    Decimal?          @db.Decimal
+  DATE_ISSUED     DateTime          @default(now())
+  customer        customer?         @relation(fields: [CUST_ID], references: [CUST_ID])
+  invoice_details invoice_details[]
+}
+
+model invoice_details {
+  DETAIL_ID   Int      @id @default(autoincrement())
+  INVOICE_ID  Int?
+  PRODUCT_ID  Int?
+  QTY         Int?
+  PRICE       Decimal? @db.Decimal
+  invoice     invoice? @relation(fields: [INVOICE_ID], references: [INVOICE_ID])
+  product     product? @relation(fields: [PRODUCT_ID], references: [PRODUCT_ID])
+}
+
+model service {
+  SERVICE_ID      Int               @id @default(autoincrement())
+  CUST_ID         Int?
+  EMPLOYEE_ID     Int?
+  STATUS          String?           @default("Pending") @db.VarChar(50)
+  DATE_LOGGED     DateTime          @default(now())
+  customer        customer?         @relation(fields: [CUST_ID], references: [CUST_ID])
+  employee        employee?         @relation(fields: [EMPLOYEE_ID], references: [EMPLOYEE_ID])
+  service_details service_details[]
+}
+
+model service_details {
+  DETAIL_ID   Int      @id @default(autoincrement())
+  SERVICE_ID  Int?
+  PRODUCT_ID  Int?
+  QTY         Int?
+  PRICE       Decimal? @db.Decimal
+  NOTES       String?  @db.Text
+  service     service? @relation(fields: [SERVICE_ID], references: [SERVICE_ID])
+  product     product? @relation(fields: [PRODUCT_ID], references: [PRODUCT_ID])
+}
+
+model system_logs {
+  LOG_ID      Int      @id @default(autoincrement())
+  USER_ID     Int?
+  ACTION      String?  @db.VarChar(250)
+  TIMESTAMP   DateTime @default(now())
+  IP_ADDRESS  String?  @db.VarChar(50)
+}
