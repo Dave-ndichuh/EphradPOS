@@ -33,13 +33,17 @@ export async function getTransactions(employeeId, role) {
     const serializedData = data.map(t => ({
       ...t,
       SUBTOTAL: t.SUBTOTAL ? Number(t.SUBTOTAL) : null,
-      TAX_AMOUNT: t.TAX_AMOUNT ? Number(t.TAX_AMOUNT) : null,
-      DISCOUNT_AMOUNT: t.DISCOUNT_AMOUNT ? Number(t.DISCOUNT_AMOUNT) : null,
+      LESSVAT: t.LESSVAT ? Number(t.LESSVAT) : null,
+      NETVAT: t.NETVAT ? Number(t.NETVAT) : null,
+      ADDVAT: t.ADDVAT ? Number(t.ADDVAT) : null,
+      GRANDTOTAL: t.GRANDTOTAL ? Number(t.GRANDTOTAL) : null,
       GRAND_TOTAL: t.GRAND_TOTAL ? Number(t.GRAND_TOTAL) : null,
       ADJUSTED_TOTAL: t.ADJUSTED_TOTAL ? Number(t.ADJUSTED_TOTAL) : null,
+      CASH: t.CASH ? Number(t.CASH) : null,
       CASH_AMOUNT: t.CASH_AMOUNT ? Number(t.CASH_AMOUNT) : null,
       MPESA_AMOUNT: t.MPESA_AMOUNT ? Number(t.MPESA_AMOUNT) : null,
       CASH_TENDERED: t.CASH_TENDERED ? Number(t.CASH_TENDERED) : null,
+      DISCOUNT_AMOUNT: t.DISCOUNT_AMOUNT ? Number(t.DISCOUNT_AMOUNT) : null,
       transaction_details: t.transaction_details?.map(d => ({
         ...d,
         UNIT_PRICE: d.UNIT_PRICE ? Number(d.UNIT_PRICE) : null,
@@ -81,7 +85,21 @@ export async function settleTransaction(transId, paymentMode, cashAmount, mpesaA
       }
     });
 
-    return updated;
+    return {
+      ...updated,
+      SUBTOTAL: updated.SUBTOTAL ? Number(updated.SUBTOTAL) : null,
+      LESSVAT: updated.LESSVAT ? Number(updated.LESSVAT) : null,
+      NETVAT: updated.NETVAT ? Number(updated.NETVAT) : null,
+      ADDVAT: updated.ADDVAT ? Number(updated.ADDVAT) : null,
+      GRANDTOTAL: updated.GRANDTOTAL ? Number(updated.GRANDTOTAL) : null,
+      GRAND_TOTAL: updated.GRAND_TOTAL ? Number(updated.GRAND_TOTAL) : null,
+      ADJUSTED_TOTAL: updated.ADJUSTED_TOTAL ? Number(updated.ADJUSTED_TOTAL) : null,
+      CASH: updated.CASH ? Number(updated.CASH) : null,
+      CASH_AMOUNT: updated.CASH_AMOUNT ? Number(updated.CASH_AMOUNT) : null,
+      MPESA_AMOUNT: updated.MPESA_AMOUNT ? Number(updated.MPESA_AMOUNT) : null,
+      CASH_TENDERED: updated.CASH_TENDERED ? Number(updated.CASH_TENDERED) : null,
+      DISCOUNT_AMOUNT: updated.DISCOUNT_AMOUNT ? Number(updated.DISCOUNT_AMOUNT) : null
+    };
   } catch (error) {
     console.error('Error settling transaction:', error);
     throw new Error('Failed to settle transaction');
@@ -126,7 +144,21 @@ export async function reverseTransaction(transId, reason, employeeId) {
         employeeId: employeeId
       });
 
-      return updated;
+      return {
+        ...updated,
+        SUBTOTAL: updated.SUBTOTAL ? Number(updated.SUBTOTAL) : null,
+        LESSVAT: updated.LESSVAT ? Number(updated.LESSVAT) : null,
+        NETVAT: updated.NETVAT ? Number(updated.NETVAT) : null,
+        ADDVAT: updated.ADDVAT ? Number(updated.ADDVAT) : null,
+        GRANDTOTAL: updated.GRANDTOTAL ? Number(updated.GRANDTOTAL) : null,
+        GRAND_TOTAL: updated.GRAND_TOTAL ? Number(updated.GRAND_TOTAL) : null,
+        ADJUSTED_TOTAL: updated.ADJUSTED_TOTAL ? Number(updated.ADJUSTED_TOTAL) : null,
+        CASH: updated.CASH ? Number(updated.CASH) : null,
+        CASH_AMOUNT: updated.CASH_AMOUNT ? Number(updated.CASH_AMOUNT) : null,
+        MPESA_AMOUNT: updated.MPESA_AMOUNT ? Number(updated.MPESA_AMOUNT) : null,
+        CASH_TENDERED: updated.CASH_TENDERED ? Number(updated.CASH_TENDERED) : null,
+        DISCOUNT_AMOUNT: updated.DISCOUNT_AMOUNT ? Number(updated.DISCOUNT_AMOUNT) : null
+      };
     });
   } catch (error) {
     console.error('Error reversing transaction:', error);

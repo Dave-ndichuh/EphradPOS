@@ -5,12 +5,7 @@ import prisma from '@/lib/prisma';
 export async function getLogs() {
   try {
     const data = await prisma.system_logs.findMany({
-      include: {
-        employee: {
-          select: { FIRST_NAME: true, LAST_NAME: true }
-        }
-      },
-      orderBy: { CREATED_AT: 'desc' },
+      orderBy: { TIMESTAMP: 'desc' },
       take: 100
     });
     return data;
@@ -49,11 +44,8 @@ export async function clearLogs(adminEmail, adminPassword) {
     // 3. Log the clear action itself
     await prisma.system_logs.create({
       data: {
-        USER_ID: adminUser ? adminUser.ID.toString() : 'admin',
-        USER_EMAIL: adminEmail,
-        ACTION: 'Cleared System Logs',
-        DETAILS: 'Admin successfully verified password and cleared all system logs.',
-        SEVERITY: 'warning'
+        USER_ID: adminUser ? parseInt(adminUser.ID, 10) : null,
+        ACTION: 'Cleared System Logs - Admin successfully verified password and cleared all system logs.'
       }
     });
 

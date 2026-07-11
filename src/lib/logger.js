@@ -29,11 +29,8 @@ export async function logAction({ action, details, severity = 'info', employeeId
 
     await prisma.system_logs.create({
       data: {
-        ACTION: action,
-        DETAILS: details,
-        SEVERITY: severity,
-        EMPLOYEE_ID: employeeId ? parseInt(employeeId) : null,
-        USER_EMAIL: userEmail
+        ACTION: `${action}${details ? ` - ${details}` : ''}`.substring(0, 250),
+        USER_ID: employeeId ? parseInt(employeeId, 10) : null
       }
     });
 

@@ -73,6 +73,7 @@ export async function createInvoice(data, cart, employeeId) {
 
       return {
         ...invoice,
+        TOTAL_AMOUNT: invoice.TOTAL_AMOUNT ? Number(invoice.TOTAL_AMOUNT) : null,
         invoice_details: details.map(d => ({
           ...d,
           DESCRIPTION: itemNameFromId(cart, d.PRODUCT_ID),
@@ -113,7 +114,8 @@ export async function createTransaction(data, cart, employeeId) {
           CREDIT_TERMS: data.CREDIT_TERMS,
           
           CASH_TENDERED: data.CASH_TENDERED,
-          IS_SETTLED: !data.IS_CREDIT
+          IS_SETTLED: !data.IS_CREDIT,
+          EMPLOYEE_ID: employeeId ? parseInt(employeeId, 10) : null
         }
       });
 
@@ -145,7 +147,21 @@ export async function createTransaction(data, cart, employeeId) {
         severity: 'info'
       });
 
-      return transaction;
+      return {
+        ...transaction,
+        SUBTOTAL: transaction.SUBTOTAL ? Number(transaction.SUBTOTAL) : null,
+        LESSVAT: transaction.LESSVAT ? Number(transaction.LESSVAT) : null,
+        NETVAT: transaction.NETVAT ? Number(transaction.NETVAT) : null,
+        ADDVAT: transaction.ADDVAT ? Number(transaction.ADDVAT) : null,
+        GRANDTOTAL: transaction.GRANDTOTAL ? Number(transaction.GRANDTOTAL) : null,
+        GRAND_TOTAL: transaction.GRAND_TOTAL ? Number(transaction.GRAND_TOTAL) : null,
+        ADJUSTED_TOTAL: transaction.ADJUSTED_TOTAL ? Number(transaction.ADJUSTED_TOTAL) : null,
+        CASH: transaction.CASH ? Number(transaction.CASH) : null,
+        CASH_AMOUNT: transaction.CASH_AMOUNT ? Number(transaction.CASH_AMOUNT) : null,
+        MPESA_AMOUNT: transaction.MPESA_AMOUNT ? Number(transaction.MPESA_AMOUNT) : null,
+        CASH_TENDERED: transaction.CASH_TENDERED ? Number(transaction.CASH_TENDERED) : null,
+        DISCOUNT_AMOUNT: transaction.DISCOUNT_AMOUNT ? Number(transaction.DISCOUNT_AMOUNT) : null
+      };
     });
   } catch (error) {
     console.error('Error creating transaction:', error);

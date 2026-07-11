@@ -31,7 +31,13 @@ export async function getCreditSales() {
       }
     });
     
-    return data;
+    const serializedData = data.map(t => ({
+      ...t,
+      ADJUSTED_TOTAL: t.ADJUSTED_TOTAL ? Number(t.ADJUSTED_TOTAL) : null,
+      GRAND_TOTAL: t.GRAND_TOTAL ? Number(t.GRAND_TOTAL) : null
+    }));
+    
+    return serializedData;
   } catch (error) {
     console.error('Error fetching credit sales:', error);
     throw new Error('Failed to fetch credit sales');

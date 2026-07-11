@@ -20,17 +20,7 @@ export async function createCustomer(data) {
       data: {
         FIRST_NAME: data.FIRST_NAME,
         LAST_NAME: data.LAST_NAME,
-        PHONE_NUMBER: data.PHONE_NUMBER,
-        EMAIL: data.EMAIL,
-        ADDRESS: data.ADDRESS,
-        CITY: data.CITY,
-        COMPANY_NAME: data.COMPANY_NAME,
-        NOTES: data.NOTES,
-        CUSTOMER_TYPE: data.CUSTOMER_TYPE,
-        LOYALTY_STATUS: data.LOYALTY_STATUS,
-        PREFERRED_CONTACT: data.PREFERRED_CONTACT,
-        TAX_ID: data.TAX_ID,
-        SECONDARY_PHONE: data.SECONDARY_PHONE
+        PHONE_NUMBER: data.PHONE_NUMBER
       }
     });
     return customer;
@@ -47,17 +37,7 @@ export async function updateCustomer(id, data) {
       data: {
         FIRST_NAME: data.FIRST_NAME,
         LAST_NAME: data.LAST_NAME,
-        PHONE_NUMBER: data.PHONE_NUMBER,
-        EMAIL: data.EMAIL,
-        ADDRESS: data.ADDRESS,
-        CITY: data.CITY,
-        COMPANY_NAME: data.COMPANY_NAME,
-        NOTES: data.NOTES,
-        CUSTOMER_TYPE: data.CUSTOMER_TYPE,
-        LOYALTY_STATUS: data.LOYALTY_STATUS,
-        PREFERRED_CONTACT: data.PREFERRED_CONTACT,
-        TAX_ID: data.TAX_ID,
-        SECONDARY_PHONE: data.SECONDARY_PHONE
+        PHONE_NUMBER: data.PHONE_NUMBER
       }
     });
     return customer;
