@@ -90,7 +90,7 @@ export default function EmployeeLoginPage() {
           -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 24px;
-          padding: 3rem;
+          padding: 2rem;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
           z-index: 10;
           display: flex;
@@ -99,7 +99,7 @@ export default function EmployeeLoginPage() {
         }
 
         .logo-container {
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -131,7 +131,7 @@ export default function EmployeeLoginPage() {
           display: flex;
           justify-content: center;
           gap: 1.25rem;
-          margin: 2.5rem 0;
+          margin: 1.5rem 0;
           height: 24px;
         }
 
@@ -156,15 +156,15 @@ export default function EmployeeLoginPage() {
           grid-template-columns: repeat(3, 1fr);
           gap: 1rem;
           width: 100%;
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
         }
 
         .keypad-btn {
-          aspect-ratio: 1;
+          height: 64px;
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 16px;
-          font-size: 1.75rem;
+          border-radius: 12px;
+          font-size: 1.5rem;
           font-weight: 500;
           color: #F8FAFC;
           display: flex;
@@ -200,7 +200,7 @@ export default function EmployeeLoginPage() {
 
         .access-btn {
           width: 100%;
-          padding: 1.25rem;
+          padding: 1rem;
           background: #00B4D8;
           color: #FFFFFF;
           border: none;
@@ -262,9 +262,20 @@ export default function EmployeeLoginPage() {
             padding: 1rem;
           }
           .kiosk-card {
-            padding: 2rem 1.5rem;
+            padding: 1.5rem;
             border-radius: 20px;
           }
+          .keypad-btn {
+            height: 56px;
+          }
+        @media (max-height: 800px) {
+          .kiosk-card { padding: 1.5rem; }
+          .logo-img { height: 48px; margin-bottom: 0.5rem; }
+          .pin-dots { margin: 1rem 0; }
+          .keypad-btn { height: 56px; font-size: 1.25rem; }
+          .keypad { gap: 0.5rem; margin-bottom: 1rem; }
+          .switch-portal { margin-top: 0.25rem; padding: 0.75rem 1rem; }
+          div[style*="marginTop: '1.5rem'"] { margin-top: 1rem !important; padding-top: 1rem !important; }
         }
       `}</style>
 
@@ -323,7 +334,7 @@ export default function EmployeeLoginPage() {
           </button>
         </form>
 
-        <div style={{ width: '100%', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+        <div style={{ width: '100%', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
           <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '0.5rem' }}>System Administrator?</p>
           <Link href="/login" className="switch-portal">
             <ArrowLeft size={18} /> Return to Admin Portal

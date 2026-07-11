@@ -61,7 +61,7 @@ export default function LoginPage() {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          padding: 4rem;
+          padding: 2rem;
           color: #FFFFFF;
           position: relative;
           overflow: hidden;
@@ -85,8 +85,8 @@ export default function LoginPage() {
         .feature-list {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
-          margin-top: 3rem;
+          gap: 1rem;
+          margin-top: 1.5rem;
         }
 
         .feature-item {
@@ -94,7 +94,7 @@ export default function LoginPage() {
           align-items: flex-start;
           gap: 1rem;
           background: rgba(255, 255, 255, 0.05);
-          padding: 1.25rem;
+          padding: 1rem;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);
@@ -112,7 +112,7 @@ export default function LoginPage() {
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          padding: 4rem 2rem;
+          padding: 2rem;
           background: #FAFAFA;
           position: relative;
         }
@@ -124,11 +124,12 @@ export default function LoginPage() {
 
         .login-input {
           width: 100%;
-          padding: 1rem 1rem 1rem 3rem;
+          padding: 0.75rem 1rem 0.75rem 3rem;
           background: #FFFFFF;
           border: 2px solid #E2E8F0;
           border-radius: 12px;
-          font-size: 1rem;
+          font-size: 0.95rem;
+          height: 48px;
           color: #0A2463;
           transition: all 0.2s ease;
         }
@@ -154,12 +155,12 @@ export default function LoginPage() {
 
         .login-btn {
           width: 100%;
-          padding: 1rem;
+          padding: 0.875rem;
           background: #0A2463;
           color: #FFFFFF;
           border: none;
           border-radius: 12px;
-          font-size: 1rem;
+          font-size: 0.95rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -223,14 +224,20 @@ export default function LoginPage() {
           .feature-list {
             display: none; /* Hide features on mobile to save space */
           }
+        @media (max-height: 768px) {
+          .brand-panel { padding: 1.5rem; }
+          .form-panel { padding: 1.5rem; }
+          .feature-item { padding: 0.75rem; }
+          .feature-list { gap: 0.75rem; }
+          .brand-content h1 { font-size: 2rem !important; }
         }
       `}</style>
 
       {/* LEFT: Brand Panel */}
       <div className="brand-panel">
         <div className="brand-content">
-          <img src="/logo.png" alt="Ephrad POS Logo" style={{ height: '64px', marginBottom: '2rem', borderRadius: '8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
-          <h1 style={{ fontSize: '3rem', fontWeight: 800, lineHeight: 1.1, marginBottom: '1rem', letterSpacing: '-0.03em' }}>
+          <img src="/logo.png" alt="Ephrad POS Logo" style={{ height: '56px', marginBottom: '1.5rem', borderRadius: '8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.1, marginBottom: '0.75rem', letterSpacing: '-0.03em' }}>
             Executive<br/>Dashboard
           </h1>
           <p style={{ fontSize: '1.125rem', color: '#94A3B8', lineHeight: 1.6 }}>
@@ -262,7 +269,7 @@ export default function LoginPage() {
           </div>
         </div>
         
-        <div style={{ position: 'relative', zIndex: 1, fontSize: '0.875rem', color: '#64748B', marginTop: '3rem' }}>
+        <div style={{ position: 'relative', zIndex: 1, fontSize: '0.875rem', color: '#64748B', marginTop: '1.5rem' }}>
           &copy; {new Date().getFullYear()} Ephrad Enterprises Limited. All rights reserved.
         </div>
       </div>
@@ -271,8 +278,8 @@ export default function LoginPage() {
       <div className="form-panel">
         <div className="form-wrapper">
           
-          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0A2463', marginBottom: '0.5rem' }}>Welcome Back</h2>
+          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0A2463', marginBottom: '0.25rem' }}>Welcome Back</h2>
             <p style={{ color: '#64748B', fontSize: '0.95rem' }}>Enter your credentials to access the admin portal.</p>
           </div>
 
@@ -282,7 +289,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             
             <div className="input-group" style={{ position: 'relative' }}>
               <Mail className="input-icon" size={20} />
@@ -318,7 +325,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div style={{ width: '100%', marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #E2E8F0', textAlign: 'center' }}>
+          <div style={{ width: '100%', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #E2E8F0', textAlign: 'center' }}>
             <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Are you a staff member?</p>
             <Link href="/employee-login" className="switch-portal">
               Go to Staff Terminal <ArrowRight size={18} />
