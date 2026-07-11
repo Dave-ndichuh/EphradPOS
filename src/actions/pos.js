@@ -10,7 +10,13 @@ export async function getPosData() {
       prisma.category.findMany({ orderBy: { CNAME: 'asc' } }),
       prisma.customer.findMany()
     ]);
-    return { products, categories, customers };
+    const serializedProducts = products.map(p => ({
+      ...p,
+      PRICE: p.PRICE ? Number(p.PRICE) : null,
+      COST_PRICE: p.COST_PRICE ? Number(p.COST_PRICE) : null,
+      TAX_RATE: p.TAX_RATE ? Number(p.TAX_RATE) : null,
+    }));
+    return { products: serializedProducts, categories, customers };
   } catch (error) {
     console.error('Error fetching POS data:', error);
     throw new Error('Failed to load POS catalog');

@@ -15,7 +15,12 @@ export async function getAllProducts() {
       },
       orderBy: { PRODUCT_ID: 'desc' }
     });
-    return data;
+    return data.map(p => ({
+      ...p,
+      PRICE: p.PRICE ? Number(p.PRICE) : null,
+      COST_PRICE: p.COST_PRICE ? Number(p.COST_PRICE) : null,
+      TAX_RATE: p.TAX_RATE ? Number(p.TAX_RATE) : null,
+    }));
   } catch (error) {
     console.error(error);
     throw new Error('Failed to fetch products');
