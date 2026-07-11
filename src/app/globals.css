@@ -469,6 +469,8 @@ button {
   background: var(--color-primary);
   color: var(--primary-foreground);
   gap: 1rem;
+  z-index: 40;
+  position: relative;
 }
 
 /* Topbar Responsive Utilities */

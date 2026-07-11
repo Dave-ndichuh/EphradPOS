@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Edit, Trash2, Search, X } from 'lucide-react';
 
 export default function EmployeesPage() {
@@ -11,6 +12,7 @@ export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [showModal, setShowModal] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     FIRST_NAME: '', LAST_NAME: '', GENDER: 'Male', EMAIL: '', PHONE_NUMBER: '', JOB_TITLE: '', LOCATION_CITY: '', PIN: ''
@@ -50,6 +52,7 @@ export default function EmployeesPage() {
       setEditingId(null);
       setFormData({ FIRST_NAME: '', LAST_NAME: '', GENDER: 'Male', EMAIL: '', PHONE_NUMBER: '', JOB_TITLE: '', LOCATION_CITY: '', PIN: '' });
     }
+    setErrorMsg('');
     setShowModal(true);
   };
 
@@ -62,13 +65,13 @@ export default function EmployeesPage() {
       const result = await saveEmployeeAction(editingId, formData);
       
       if (!result.success) {
-        alert(`Error: ${result.error}`);
+        setErrorMsg(result.error);
       } else {
         setShowModal(false);
         fetchEmployees();
       }
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      setErrorMsg(error.message);
     }
     
     setLoading(false);
@@ -168,8 +171,8 @@ export default function EmployeesPage() {
         </table>
       </div>
 
-      {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '2rem' }}>
+      {showModal && typeof document !== 'undefined' && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '2rem' }}>
           <div className="glass" style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--background)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
               <h3 className="heading-2" style={{ margin: 0 }}>{editingId ? 'Edit Employee' : 'Add Employee'}</h3>
@@ -177,6 +180,12 @@ export default function EmployeesPage() {
             </div>
             
             <form onSubmit={saveEmployee} style={{ padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              
+              {errorMsg && (
+                <div style={{ padding: '1rem', background: 'rgba(217, 4, 41, 0.1)', border: '1px solid rgba(217, 4, 41, 0.2)', borderRadius: '8px', color: '#D90429', fontSize: '0.875rem', fontWeight: 500, userSelect: 'text' }}>
+                  {errorMsg}
+                </div>
+              )}
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', gap: '1rem' }}>
@@ -200,20 +209,20 @@ export default function EmployeesPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                  <input type="text" className="input" placeholder="Location City (e.g. Nairobi)" value={formData.LOCATION_CITY} onChange={e => setFormData({...formData, LOCATION_CITY: e.target.value})} required />
-                  <input type="text" className="input" placeholder={editingId ? "PIN cannot be edited here" : "Set 4-to-6 Digit PIN"} value={formData.PIN} onChange={e => setFormData({...formData, PIN: e.target.value})} required={!editingId} minLength="4" maxLength="6" pattern="\d+" title={editingId ? "Cannot change PIN after creation" : "Numeric PIN only"} disabled={!!editingId} />
+                  <input type="text" className="input" placeholder="City Location" value={formData.LOCATION_CITY} onChange={e => setFormData({...formData, LOCATION_CITY: e.target.value})} required />
+                  <input type="text" className="input" placeholder={editingId ? "PIN cannot be edited here" : "Set 4-Digit PIN"} maxLength="4" value={formData.PIN} onChange={e => setFormData({...formData, PIN: e.target.value.replace(/\D/g, '')})} required={!editingId} disabled={!!editingId} />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-                <button type="button" className="btn btn-secondary" style={{ marginRight: '1rem' }} onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 2.5rem' }}>Save Employee</button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Saving...' : 'Save Employee'}</button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
 }
-

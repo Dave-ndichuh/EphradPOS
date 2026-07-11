@@ -77,28 +77,53 @@ export async function saveEmployee(id, formData) {
       return { success: true, employee };
     } else {
       // Create
-      // Generate Username
+      // Generate Username for the associated users table
       const rawUsername = `${formData.FIRST_NAME.charAt(0)}${formData.LAST_NAME}`.toLowerCase().replace(/[^a-z0-9]/g, '');
       let username = rawUsername;
       
-      const existingUser = await prisma.employee.findFirst({
+      const existingUser = await prisma.users.findFirst({
         where: { USERNAME: username }
       });
       
       if (existingUser) {
         username = `${rawUsername}${Math.floor(1000 + Math.random() * 9000)}`;
       }
-      
-      payload.USERNAME = username;
 
+      // 1. Create the employee record (without the USERNAME property)
       const employee = await prisma.employee.create({
         data: payload
+      });
+
+      // 2. Resolve the user TYPE_ID (Staff by default)
+      let userType = await prisma.type.findFirst({
+        where: { TYPE: { equals: 'Staff', mode: 'insensitive' } }
+      });
+      if (!userType) {
+        userType = await prisma.type.create({
+          data: { TYPE: 'Staff' }
+        });
+      }
+
+      // 3. Create the associated users record
+      await prisma.users.create({
+        data: {
+          EMPLOYEE_ID: employee.EMPLOYEE_ID,
+          USERNAME: username,
+          PASSWORD: 'password123', // Default temporary password
+          TYPE_ID: userType.TYPE_ID // Use the dynamically resolved ID
+        }
       });
       return { success: true, employee };
     }
   } catch (error) {
     console.error('Error saving employee:', error);
-    return { success: false, error: 'Failed to save employee' };
+    let errorMsg = 'Failed to save employee';
+    if (error.code === 'P2002') {
+      errorMsg = 'An employee with this Phone Number already exists.';
+    } else if (error.message) {
+      errorMsg = error.message;
+    }
+    return { success: false, error: errorMsg };
   }
 }
 
