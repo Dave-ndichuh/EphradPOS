@@ -66,12 +66,10 @@ export default function LogsPage() {
 
   const filteredLogs = logs.filter(log => {
     const term = searchTerm.toLowerCase();
-    const employeeName = log.employee ? `${log.employee.FIRST_NAME} ${log.employee.LAST_NAME}`.toLowerCase() : '';
-    const email = (log.USER_EMAIL || '').toLowerCase();
     const action = (log.ACTION || '').toLowerCase();
-    const details = (log.DETAILS || '').toLowerCase();
+    const userId = (log.USER_ID || '').toString().toLowerCase();
 
-    return action.includes(term) || details.includes(term) || employeeName.includes(term) || email.includes(term);
+    return action.includes(term) || userId.includes(term);
   });
 
   const getSeverityIcon = (severity) => {
@@ -124,10 +122,8 @@ export default function LogsPage() {
             <thead>
               <tr>
                 <th>Timestamp</th>
-                <th>Severity</th>
+                <th>User ID</th>
                 <th>Action</th>
-                <th>User</th>
-                <th>Details</th>
               </tr>
             </thead>
             <tbody>
@@ -140,33 +136,21 @@ export default function LogsPage() {
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', fontSize: '0.875rem' }}>
                       <Clock size={14} />
-                      {new Date(log.CREATED_AT).toLocaleString()}
+                      {new Date(log.TIMESTAMP).toLocaleString()}
                     </div>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {getSeverityIcon(log.SEVERITY)}
-                      {getSeverityBadge(log.SEVERITY)}
-                    </div>
-                  </td>
-                  <td style={{ fontWeight: 600 }}>{log.ACTION}</td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <User size={14} className="text-muted" />
                       </div>
                       <div>
-                        {log.employee ? (
-                          <div style={{ fontWeight: 500 }}>{log.employee.FIRST_NAME} {log.employee.LAST_NAME}</div>
-                        ) : (
-                          <div style={{ fontWeight: 500 }}>Admin</div>
-                        )}
-                        {log.USER_EMAIL && <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>{log.USER_EMAIL}</div>}
+                        <div style={{ fontWeight: 500 }}>User ID: {log.USER_ID || 'Admin'}</div>
                       </div>
                     </div>
                   </td>
-                  <td style={{ maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)' }}>{log.DETAILS}</span>
+                  <td style={{ maxWidth: '600px', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                    {log.ACTION}
                   </td>
                 </tr>
               ))}

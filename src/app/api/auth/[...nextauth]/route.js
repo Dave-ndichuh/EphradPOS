@@ -40,7 +40,11 @@ const handler = NextAuth({
         // 1. Check if the user exists in the employee table first
         const employee = await prisma.employee.findFirst({
           where: { EMAIL: credentials.email },
-          include: { users: true },
+          include: { 
+            users: {
+              include: { type: true }
+            } 
+          },
         });
 
         if (employee) {
@@ -56,12 +60,14 @@ const handler = NextAuth({
             throw new Error('Invalid password');
           }
 
-          // Employees always get the "staff" role
+          // Check if the linked user account has an Admin type
+          const isAdmin = user.type && user.type.TYPE && user.type.TYPE.toLowerCase() === 'admin';
+
           return {
             id: employee.EMPLOYEE_ID.toString(),
             name: (employee.FIRST_NAME || '') + ' ' + (employee.LAST_NAME || ''),
             email: employee.EMAIL,
-            role: 'staff',
+            role: isAdmin ? 'admin' : 'staff',
           };
         }
 
