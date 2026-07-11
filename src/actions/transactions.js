@@ -30,7 +30,25 @@ export async function getTransactions(employeeId, role) {
       orderBy: { TRANS_ID: 'desc' }
     });
 
-    return data;
+    const serializedData = data.map(t => ({
+      ...t,
+      SUBTOTAL: t.SUBTOTAL ? Number(t.SUBTOTAL) : null,
+      TAX_AMOUNT: t.TAX_AMOUNT ? Number(t.TAX_AMOUNT) : null,
+      DISCOUNT_AMOUNT: t.DISCOUNT_AMOUNT ? Number(t.DISCOUNT_AMOUNT) : null,
+      GRAND_TOTAL: t.GRAND_TOTAL ? Number(t.GRAND_TOTAL) : null,
+      ADJUSTED_TOTAL: t.ADJUSTED_TOTAL ? Number(t.ADJUSTED_TOTAL) : null,
+      CASH_AMOUNT: t.CASH_AMOUNT ? Number(t.CASH_AMOUNT) : null,
+      MPESA_AMOUNT: t.MPESA_AMOUNT ? Number(t.MPESA_AMOUNT) : null,
+      CASH_TENDERED: t.CASH_TENDERED ? Number(t.CASH_TENDERED) : null,
+      transaction_details: t.transaction_details?.map(d => ({
+        ...d,
+        UNIT_PRICE: d.UNIT_PRICE ? Number(d.UNIT_PRICE) : null,
+        PRICE: d.PRICE ? Number(d.PRICE) : null,
+        SUBTOTAL: d.SUBTOTAL ? Number(d.SUBTOTAL) : null,
+      })) || []
+    }));
+
+    return serializedData;
   } catch (error) {
     console.error('Error fetching transactions:', error);
     throw new Error('Failed to fetch transactions');

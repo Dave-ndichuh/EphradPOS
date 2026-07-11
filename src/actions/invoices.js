@@ -17,7 +17,19 @@ export async function getInvoices(role, employeeId) {
       orderBy: { INVOICE_ID: 'desc' }
     });
 
-    return data;
+    const serializedData = data.map(i => ({
+      ...i,
+      SUBTOTAL: i.SUBTOTAL ? Number(i.SUBTOTAL) : null,
+      TAX_AMOUNT: i.TAX_AMOUNT ? Number(i.TAX_AMOUNT) : null,
+      GRAND_TOTAL: i.GRAND_TOTAL ? Number(i.GRAND_TOTAL) : null,
+      invoice_details: i.invoice_details?.map(d => ({
+        ...d,
+        UNIT_PRICE: d.UNIT_PRICE ? Number(d.UNIT_PRICE) : null,
+        TOTAL_PRICE: d.TOTAL_PRICE ? Number(d.TOTAL_PRICE) : null,
+      })) || [],
+    }));
+
+    return serializedData;
   } catch (error) {
     console.error('Error fetching invoices:', error);
     throw new Error('Failed to fetch invoices');
@@ -29,7 +41,12 @@ export async function getActiveProducts() {
     const data = await prisma.product.findMany({
       where: { STATUS: 'active' }
     });
-    return data;
+    return data.map(p => ({
+      ...p,
+      PRICE: p.PRICE ? Number(p.PRICE) : null,
+      COST_PRICE: p.COST_PRICE ? Number(p.COST_PRICE) : null,
+      TAX_RATE: p.TAX_RATE ? Number(p.TAX_RATE) : null,
+    }));
   } catch (error) {
     console.error('Error fetching products:', error);
     throw new Error('Failed to fetch products');

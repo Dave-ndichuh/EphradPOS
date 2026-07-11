@@ -27,7 +27,24 @@ export async function getServicesData(role, employeeId) {
       prisma.product.findMany({ where: { ON_HAND: { gt: 0 } } })
     ]);
 
-    return { success: true, data: { services, customers, employees, products } };
+    const serializedProducts = products.map(p => ({
+      ...p,
+      PRICE: p.PRICE ? Number(p.PRICE) : null,
+      COST_PRICE: p.COST_PRICE ? Number(p.COST_PRICE) : null,
+      TAX_RATE: p.TAX_RATE ? Number(p.TAX_RATE) : null,
+    }));
+
+    const serializedServices = services.map(s => ({
+      ...s,
+      PRICE: s.PRICE ? Number(s.PRICE) : null,
+      service_details: s.service_details?.map(d => ({
+        ...d,
+        UNIT_PRICE: d.UNIT_PRICE ? Number(d.UNIT_PRICE) : null,
+        SUBTOTAL: d.SUBTOTAL ? Number(d.SUBTOTAL) : null,
+      })) || [],
+    }));
+
+    return { success: true, data: { services: serializedServices, customers, employees, products: serializedProducts } };
   } catch (error) {
     console.error('Error fetching services data:', error);
     return { success: false, error: 'Failed to fetch services data' };
