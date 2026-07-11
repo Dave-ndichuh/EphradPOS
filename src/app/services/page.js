@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthGuard';
-
+import { AlertTriangle, Search, Plus, Edit, Trash2, X, Settings, Wrench, Calendar } from 'lucide-react';
 export default function ServicesPage() {
   const [services, setServices] = useState([]);
   const [customers, setCustomers] = useState([]);
