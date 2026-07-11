@@ -1,6 +1,5 @@
 import './globals.css';
-import Sidebar from '@/components/Sidebar';
-import Topbar from '@/components/Topbar';
+import LayoutWrapper from '@/components/LayoutWrapper';
 import { ThemeProvider } from '@/context/ThemeContext';
 import AuthProvider from '@/components/AuthGuard';
 import Providers from '@/components/Providers';
@@ -25,15 +24,9 @@ export default function RootLayout({ children }) {
         <Providers>
           <ThemeProvider>
             <AuthProvider>
-              <div className="app-layout">
-                <Sidebar />
-                <div className="main-content">
-                  <Topbar />
-                  <main className="page-content">
-                    {children}
-                  </main>
-                </div>
-              </div>
+              <LayoutWrapper>
+                {children}
+              </LayoutWrapper>
             </AuthProvider>
           </ThemeProvider>
         </Providers>

@@ -20,7 +20,8 @@ export default function AuthProvider({ children }) {
     if (status === 'loading') return; // Do nothing while loading
 
     if (status === 'unauthenticated') {
-      if (pathname !== '/login' && pathname !== '/employee-login') {
+      const isPublicRoute = pathname.startsWith('/shop') || pathname.startsWith('/api/webhooks');
+      if (pathname !== '/login' && pathname !== '/employee-login' && !isPublicRoute) {
         router.push('/login');
       } else {
         setAuthorized(true);
@@ -48,7 +49,8 @@ export default function AuthProvider({ children }) {
     return <div style={{ minHeight: '100vh', background: 'var(--background)' }} />;
   }
 
-  if (!authorized && pathname !== '/login' && pathname !== '/employee-login') return null;
+  const isPublicRoute = pathname.startsWith('/shop') || pathname.startsWith('/api/webhooks');
+  if (!authorized && pathname !== '/login' && pathname !== '/employee-login' && !isPublicRoute) return null;
 
   return (
     <AuthContext.Provider value={{ 

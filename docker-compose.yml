@@ -1,0 +1,19 @@
+services:
+  openwa:
+    image: openwa/wa-automate:latest
+    container_name: ephrad_openwa
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # OpenWA API Gateway
+    environment:
+      # Automatically open the browser for QR scanning on first start
+      - WA_BROWSER_WS_ENDPOINT=
+      - WA_CLI_CONFIG={"webhook":"http://host.docker.internal:3000/api/webhooks/whatsapp","session":"ephrad_session","qrTimeout":0,"killProcessOnBrowserClose":true}
+    volumes:
+      - ./openwa_data:/app/session
+    networks:
+      - ephrad_net
+
+networks:
+  ephrad_net:
+    driver: bridge

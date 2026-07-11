@@ -89,6 +89,7 @@ model product {
   BRAND             String?   @db.VarChar(100)
   MODEL             String?   @db.VarChar(100)
   WEIGHT            String?   @db.VarChar(50)
+  ENQUIRY_COUNT     Int?      @default(0)
   category          category? @relation(fields: [CATEGORY_ID], references: [CATEGORY_ID])
   supplier          supplier? @relation(fields: [SUPPLIER_ID], references: [SUPPLIER_ID])
   transaction_details transaction_details[]
