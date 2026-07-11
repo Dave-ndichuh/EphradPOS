@@ -5,7 +5,11 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  disable: process.env.NODE_ENV === 'development',
+  disable: true, // Disabled to fix Vercel Serverless Function 404s with NextAuth
+  workboxOptions: {
+    disableDevLogs: true,
+    exclude: [/api\/.*$/], // Don't cache API routes
+  }
 });
 
 /** @type {import('next').NextConfig} */
