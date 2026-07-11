@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { useSession } from 'next-auth/react';
 
 const AuthContext = createContext({ user: null, role: null, employeeId: null, loading: true });
 
@@ -11,44 +11,28 @@ export const useAuth = () => useContext(AuthContext);
 export default function AuthProvider({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
+  
   const [authorized, setAuthorized] = useState(false);
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
-  const [employeeId, setEmployeeId] = useState(null);
+  const loading = status === 'loading';
 
   useEffect(() => {
-    const checkAuth = async () => {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        setUser(null);
-        setRole(null);
-        setEmployeeId(null);
-        if (pathname !== '/login' && pathname !== '/employee-login') {
-          router.push('/login');
-        } else {
-          setAuthorized(true);
-        }
-        setLoading(false);
-        return;
+    if (status === 'loading') return; // Do nothing while loading
+
+    if (status === 'unauthenticated') {
+      if (pathname !== '/login' && pathname !== '/employee-login') {
+        router.push('/login');
+      } else {
+        setAuthorized(true);
       }
+      return;
+    }
 
-      setUser(user);
+    if (status === 'authenticated') {
+      const currentRole = session.user.role;
+      const employeeId = session.user.id;
 
-      const { data: empData, error: empError } = await supabase
-        .from('employee')
-        .select('EMAIL, EMPLOYEE_ID')
-        .ilike('EMAIL', user.email)
-        .maybeSingle();
-
-      const isEmployee = !!empData;
-      const currentRole = isEmployee ? 'employee' : 'admin';
-      setRole(currentRole);
-      setEmployeeId(empData?.EMPLOYEE_ID || null);
-
-      if (isEmployee) {
+      if (currentRole === 'staff') {
         const allowedEmployeeRoutes = ['/pos', '/customers', '/transactions', '/services', '/invoices', '/login', '/employee-login'];
         if (!allowedEmployeeRoutes.includes(pathname)) {
           router.push('/pos');
@@ -57,24 +41,8 @@ export default function AuthProvider({ children }) {
       }
 
       setAuthorized(true);
-      setLoading(false);
-    };
-
-    checkAuth();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setRole(null);
-        setEmployeeId(null);
-        router.push('/login');
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [pathname, router]);
+    }
+  }, [status, pathname, router, session]);
 
   if (loading) {
     return <div style={{ minHeight: '100vh', background: 'var(--background)' }} />;
@@ -83,7 +51,12 @@ export default function AuthProvider({ children }) {
   if (!authorized && pathname !== '/login' && pathname !== '/employee-login') return null;
 
   return (
-    <AuthContext.Provider value={{ user, role, employeeId, loading }}>
+    <AuthContext.Provider value={{ 
+      user: session?.user || null, 
+      role: session?.user?.role || null, 
+      employeeId: session?.user?.id || null, 
+      loading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

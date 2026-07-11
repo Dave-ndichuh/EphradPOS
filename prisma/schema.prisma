@@ -33,6 +33,7 @@ model employee {
   GENDER       String?   @db.VarChar(50)
   EMAIL        String?   @db.VarChar(100)
   PHONE_NUMBER String?   @unique @db.VarChar(11)
+  PIN          String?   @db.VarChar(10)
   JOB_ID       Int?
   LOCATION_ID  Int?
   job          job?      @relation(fields: [JOB_ID], references: [JOB_ID])
@@ -68,19 +69,19 @@ model supplier {
 
 model product {
   PRODUCT_ID        Int       @id @default(autoincrement())
-  PRODUCT_CODE      String    @db.VarChar(20)
+  PRODUCT_CODE      String?   @db.VarChar(20)
   NAME              String?   @db.VarChar(50)
   DESCRIPTION       String?   @db.VarChar(250)
   QTY_STOCK         Int?
   ON_HAND           Int       @default(0)
-  PRICE             Int?
+  PRICE             Decimal?  @db.Decimal
+  COST_PRICE        Decimal?  @db.Decimal
   CATEGORY_ID       Int?
   SUPPLIER_ID       Int?
   DATE_STOCK_IN     String?   @db.VarChar(50)
   STATUS            String?   @default("active") @db.VarChar(20)
   UOM               String?   @default("pcs") @db.VarChar(20)
   REORDER_THRESHOLD Int?      @default(5)
-  COST_PRICE        Int?      @default(0)
   BARCODE           String?   @db.VarChar(50)
   IMAGE_URL         String?   @db.VarChar(255)
   TAX_RATE          Decimal?  @default(16.0) @db.Decimal
@@ -89,6 +90,7 @@ model product {
   WEIGHT            String?   @db.VarChar(50)
   category          category? @relation(fields: [CATEGORY_ID], references: [CATEGORY_ID])
   supplier          supplier? @relation(fields: [SUPPLIER_ID], references: [SUPPLIER_ID])
+  transaction_details transaction_details[]
   service_details   service_details[]
   invoice_details   invoice_details[]
 }
@@ -98,35 +100,55 @@ model customer {
   FIRST_NAME   String?       @db.VarChar(50)
   LAST_NAME    String?       @db.VarChar(50)
   PHONE_NUMBER String?       @db.VarChar(11)
-  transactions transaction[]
+  transactions transaction[] @relation("CustomerTransaction")
+  credit_transactions transaction[] @relation("CreditCustomerTransaction")
   services     service[]
   invoices     invoice[]
 }
 
 model transaction_details {
-  ID         Int    @id @default(autoincrement())
-  TRANS_D_ID String @db.VarChar(250)
-  PRODUCTS   String @db.VarChar(250)
-  QTY        String @db.VarChar(250)
-  PRICE      String @db.VarChar(250)
-  EMPLOYEE   String @db.VarChar(250)
-  ROLE       String @db.VarChar(250)
+  ID          Int         @id @default(autoincrement())
+  TRANS_ID    Int?
+  PRODUCT_ID  Int?
+  QTY         Int?
+  UNIT_PRICE  Decimal?    @db.Decimal
+  PRICE       Decimal?    @db.Decimal
+  transaction transaction? @relation(fields: [TRANS_ID], references: [TRANS_ID])
+  product     product?     @relation(fields: [PRODUCT_ID], references: [PRODUCT_ID])
 }
 
 model transaction {
-  TRANS_ID   Int       @id @default(autoincrement())
-  CUST_ID    Int?
-  NUMOFITEMS String    @db.VarChar(250)
-  SUBTOTAL   String    @db.VarChar(50)
-  LESSVAT    String    @db.VarChar(50)
-  NETVAT     String    @db.VarChar(50)
-  ADDVAT     String    @db.VarChar(50)
-  GRANDTOTAL String    @db.VarChar(250)
-  CASH       String    @db.VarChar(250)
-  DATE       String    @db.VarChar(50)
-  TRANS_D_ID String    @db.VarChar(250)
-  INVOICE_ID String?   @db.VarChar(50)
-  customer   customer? @relation(fields: [CUST_ID], references: [CUST_ID])
+  TRANS_ID           Int       @id @default(autoincrement())
+  CUST_ID            Int?
+  CREDIT_CUSTOMER_ID Int?
+  NUMOFITEMS         String?   @db.VarChar(250)
+  SUBTOTAL           Decimal?  @db.Decimal
+  LESSVAT            Decimal?  @db.Decimal
+  NETVAT             Decimal?  @db.Decimal
+  ADDVAT             Decimal?  @db.Decimal
+  GRANDTOTAL         Decimal?  @db.Decimal
+  GRAND_TOTAL        Decimal?  @db.Decimal
+  ADJUSTED_TOTAL     Decimal?  @db.Decimal
+  CASH               Decimal?  @db.Decimal
+  CASH_AMOUNT        Decimal?  @db.Decimal
+  MPESA_AMOUNT       Decimal?  @db.Decimal
+  CASH_TENDERED      Decimal?  @db.Decimal
+  PAYMENT_METHOD     String?   @db.VarChar(50)
+  DATE               String?   @db.VarChar(50)
+  CREATED_AT         DateTime? @default(now())
+  IS_CREDIT          Boolean?  @default(false)
+  IS_SETTLED         Boolean?  @default(true)
+  HYBRID_PAYMENT     Boolean?  @default(false)
+  CREDIT_DUE_DATE    DateTime?
+  CREDIT_TERMS       String?   @db.VarChar(100)
+  INVOICE_ID         String?   @db.VarChar(50)
+  DISCOUNT_AMOUNT    Decimal?  @default(0) @db.Decimal
+  status             String?   @default("Active") @db.VarChar(50)
+  reversal_reason    String?   @db.Text
+  EMPLOYEE_ID        Int?
+  customer           customer? @relation("CustomerTransaction", fields: [CUST_ID], references: [CUST_ID])
+  credit_customer    customer? @relation("CreditCustomerTransaction", fields: [CREDIT_CUSTOMER_ID], references: [CUST_ID])
+  transaction_details transaction_details[]
 }
 
 model invoice {

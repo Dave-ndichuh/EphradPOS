@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Search, Printer, Calendar, X, Eye, CheckCircle } from 'lucide-react';
 import Receipt from '@/components/Receipt';
 import { formatTransId, formatItemName } from '@/utils/formatters';
@@ -55,26 +54,14 @@ function TransactionsContent() {
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      let query = supabase
-        .from('transaction')
-        .select(`
-          *,
-          customer!transaction_CUST_ID_fkey(FIRST_NAME, LAST_NAME),
-          credit_customer:customer!transaction_CREDIT_CUSTOMER_ID_fkey(FIRST_NAME, LAST_NAME),
-          transaction_details(*, product(NAME, BRAND, PRODUCT_CODE, MODEL))
-        `)
-        .order('TRANS_ID', { ascending: false });
-
-      if (role === 'employee' && employeeId) {
-        query = query.eq('EMPLOYEE_ID', employeeId);
-      }
-      
-      const { data, error } = await query;
-
-      if (error) {
+      try {
+        const { getTransactions } = await import('@/actions/transactions');
+        const data = await getTransactions(employeeId, role);
+        if (data) {
+          setTransactions(data);
+        }
+      } catch (error) {
         console.error('Transactions fetch error:', error);
-      } else if (data) {
-        setTransactions(data);
       }
       setLoading(false);
     };
@@ -168,18 +155,10 @@ function TransactionsContent() {
       }
     }
 
-    const { error } = await supabase.from('transaction').update({
-      PAYMENT_METHOD: paymentMode,
-      CASH_AMOUNT: finalCash,
-      MPESA_AMOUNT: finalMpesa,
-      HYBRID_PAYMENT: isHybrid,
-      IS_SETTLED: true,
-      CASH_TENDERED: totalDue
-    }).eq('TRANS_ID', transactionToSettle.TRANS_ID);
-
-    if (error) {
-      alert('Error settling transaction: ' + error.message);
-    } else {
+    try {
+      const { settleTransaction } = await import('@/actions/transactions');
+      await settleTransaction(transactionToSettle.TRANS_ID, paymentMode, finalCash, finalMpesa, totalDue);
+      
       setSettleModalOpen(false);
       setTransactionToSettle(null);
       // Quickly update local state to avoid full refetch
@@ -189,6 +168,8 @@ function TransactionsContent() {
         }
         return t;
       }));
+    } catch (error) {
+      alert('Error settling transaction: ' + error.message);
     }
   };
 
@@ -197,34 +178,23 @@ function TransactionsContent() {
     if (!reversalReason.trim()) return alert("A reason is required to reverse a transaction.");
     
     setReversing(true);
-    const { error } = await supabase.rpc('reverse_transaction', {
-      p_trans_id: selectedTransaction.TRANS_ID,
-      p_reason: reversalReason.trim(),
-      p_user: employeeId || 'Admin' // Adjust based on your user tracking
-    });
+    try {
+      const { reverseTransaction } = await import('@/actions/transactions');
+      await reverseTransaction(selectedTransaction.TRANS_ID, reversalReason.trim(), employeeId);
 
-    if (error) {
+      // Update local state to mark as reversed
+      setTransactions(prev => prev.map(t => t.TRANS_ID === selectedTransaction.TRANS_ID ? { ...t, status: 'Reversed', reversal_reason: reversalReason } : t));
+
+
+      setReversalModalOpen(false);
+      setReversalReason('');
+      setSelectedTransaction(null);
+      setReversing(false);
+      alert('Transaction successfully reversed and stock restored.');
+    } catch (error) {
       alert('Error reversing transaction: ' + error.message);
       setReversing(false);
-      return;
     }
-
-    // Update local state to mark as reversed
-    setTransactions(prev => prev.map(t => t.TRANS_ID === selectedTransaction.TRANS_ID ? { ...t, status: 'Reversed', reversal_reason: reversalReason } : t));
-    
-    // Log action
-    await supabase.from('system_logs').insert([{
-      ACTION: 'Reversed Transaction',
-      DETAILS: `Reversed TRX-${formatTransId(selectedTransaction.TRANS_ID)}. Reason: ${reversalReason}`,
-      SEVERITY: 'warning',
-      EMPLOYEE_ID: employeeId || null
-    }]);
-
-    setReversalModalOpen(false);
-    setReversalReason('');
-    setSelectedTransaction(null);
-    setReversing(false);
-    alert('Transaction successfully reversed and stock restored.');
   };
 
   return (

@@ -36,7 +36,8 @@ export default function Sidebar() {
 
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    const { signOut } = await import('next-auth/react');
+    await signOut({ redirect: false });
     document.body.classList.remove('sidebar-open');
     router.push('/login');
   };

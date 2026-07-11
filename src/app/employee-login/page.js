@@ -35,32 +35,23 @@ export default function EmployeeLoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/auth/lookup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin })
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.email) {
-        throw new Error(data.error || 'Invalid PIN.');
-      }
-
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: pin,
+      const { signIn } = await import('next-auth/react');
+      
+      const res = await signIn('credentials', {
+        pin,
+        isEmployee: 'true',
+        redirect: false
       });
 
-      if (authError) {
-        throw new Error('Invalid PIN.');
+      if (res?.error) {
+        throw new Error(res.error);
       }
 
       await logAction({
         action: 'Employee Login',
-        details: `Employee ${data.firstName} ${data.lastName} logged in via PIN.`,
+        details: `Employee logged in via PIN using NextAuth.`,
         severity: 'info',
-        employeeId: data.employeeId,
-        userEmail: data.email
+        userEmail: `Employee (PIN: ***)`
       });
 
       router.push('/pos');

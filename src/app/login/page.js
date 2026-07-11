@@ -20,15 +20,20 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { signIn } = await import('next-auth/react');
+      const res = await signIn('credentials', {
         email,
         password,
+        redirect: false,
       });
-      if (error) throw error;
+      
+      if (res?.error) {
+        throw new Error(res.error);
+      }
       
       await logAction({
         action: 'Admin Login',
-        details: `Admin user ${email} logged in.`,
+        details: `Admin user ${email} logged in via NextAuth.`,
         severity: 'info',
         userEmail: email
       });

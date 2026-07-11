@@ -1,4 +1,4 @@
-import { productRepository } from '@/infrastructure/repositories/productRepository';
+import { getAllProducts, getAllCategories, getAllSuppliers, createProduct, updateProduct, deleteProduct } from '@/infrastructure/repositories/productRepository';
 import { mapToProductEntity, mapFromProductForm } from '@/core/entities/Product';
 
 /**
@@ -9,9 +9,9 @@ export const ProductService = {
   async fetchAllData() {
     // Fetch products, categories, and suppliers concurrently
     const [rawProducts, categories, suppliers] = await Promise.all([
-      productRepository.getAllProducts(),
-      productRepository.getAllCategories(),
-      productRepository.getAllSuppliers()
+      getAllProducts(),
+      getAllCategories(),
+      getAllSuppliers()
     ]);
 
     // Map raw database rows to domain entities
@@ -27,14 +27,14 @@ export const ProductService = {
     // but preserving the original behavior of the controller.
     if (id) {
       delete payload.DATE_STOCK_IN; // Ensure we don't overwrite creation date on update
-      return await productRepository.updateProduct(id, payload);
+      return await updateProduct(id, payload);
     } else {
-      return await productRepository.createProduct(payload);
+      return await createProduct(payload);
     }
   },
 
   async deleteProduct(id) {
-    return await productRepository.deleteProduct(id);
+    return await deleteProduct(id);
   }
 };
 

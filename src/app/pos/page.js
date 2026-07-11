@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
 import { Search, Plus, Minus, Trash2, CreditCard, Loader2, ShoppingCart, Smartphone, ArrowLeft, Tag, Layers, User as UserIcon, Calendar, X, ChevronDown, ShoppingBag, Image as ImageIcon, FileText, Printer } from 'lucide-react';
 import Receipt from '@/components/Receipt';
 import InvoicePrint from '@/components/InvoicePrint';
@@ -102,22 +101,16 @@ export default function POSPage() {
   const fetchData = async () => {
     setLoading(true);
     setFetchError(null);
-    const [prodRes, catRes, custRes] = await Promise.all([
-      supabase.from('product').select('*'),
-      supabase.from('category').select('*').order('CNAME', { ascending: true }),
-      supabase.from('customer').select('*')
-    ]);
-    
-    if (prodRes.error || catRes.error || custRes.error) {
-      const errorMessage = prodRes.error?.message || catRes.error?.message || custRes.error?.message || 'Unable to load POS data';
-      console.error('POS fetch error:', prodRes.error || catRes.error || custRes.error);
-      setFetchError(errorMessage);
+    try {
+      const { getPosData } = await import('@/actions/pos');
+      const { products, categories, customers } = await getPosData();
+      if (products) setProducts(products);
+      if (categories) setCategories(categories);
+      if (customers) setCustomers(customers);
+    } catch (err) {
+      console.error('POS fetch error:', err);
+      setFetchError(err.message || 'Unable to load POS data');
     }
-
-    if (prodRes.data) setProducts(prodRes.data);
-    if (catRes.data) setCategories(catRes.data);
-    if (custRes.data) setCustomers(custRes.data);
-    
     setLoading(false);
   };
 
@@ -389,8 +382,8 @@ export default function POSPage() {
     }
     setSavingCustomer(true);
     try {
-      const { data, error } = await supabase.from('customer').insert([newCustomer]).select().single();
-      if (error) throw error;
+      const { createCustomer } = await import('@/actions/pos');
+      const data = await createCustomer(newCustomer);
       setCustomers([...customers, data]);
       setCreditCustomerId(String(data.CUST_ID));
       setShowAddCustomer(false);
@@ -436,50 +429,16 @@ export default function POSPage() {
 
     try {
       if (paymentMethod === 'Invoice') {
-        const selectedCustomer = customers.find(c => c.CUST_ID === parseInt(creditCustomerId));
+        const { createInvoice } = await import('@/actions/pos');
+        const invoiceData = {
+          CUST_ID: parseInt(creditCustomerId) || null,
+          SUBTOTAL: grandTotal
+        };
+
+        const result = await createInvoice(invoiceData, cart, employeeId);
+        alert(`Success! Invoice #${result.INVOICE_ID} created.`);
         
-        const { data: invData, error: invError } = await supabase.from('invoice').insert([{
-          CUSTOMER_NAME: selectedCustomer ? `${selectedCustomer.FIRST_NAME} ${selectedCustomer.LAST_NAME}` : 'Walk-in',
-          CUSTOMER_PHONE: selectedCustomer?.PHONE || '',
-          CUSTOMER_ADDRESS: selectedCustomer?.ADDRESS || '',
-          CUSTOMER_EMAIL: selectedCustomer?.EMAIL || '',
-          NOTES: creditTerms || 'Generated from POS',
-          SUBTOTAL: grandTotal,
-          TAX_AMOUNT: 0,
-          GRAND_TOTAL: grandTotal,
-          STATUS: 'Pending',
-          EMPLOYEE_ID: employeeId
-        }]).select().single();
-
-        if (invError) throw invError;
-
-        const details = cart.map(item => {
-          const effectivePrice = item.PRICE + (Number(item.adjustment) || 0);
-          return {
-            INVOICE_ID: invData.INVOICE_ID,
-            PRODUCT_ID: item.PRODUCT_ID,
-            DESCRIPTION: formatItemName(item),
-            QTY: item.quantity,
-            UNIT_PRICE: effectivePrice,
-            TOTAL_PRICE: effectivePrice * item.quantity
-          };
-        });
-
-        await supabase.from('invoice_details').insert(details);
-
-        await logAction({
-          action: 'Created POS Invoice',
-          details: `Invoice #${invData.INVOICE_ID} created via POS for Ksh. ${subtotal.toLocaleString()}`,
-          severity: 'info',
-          employeeId: employeeId
-        });
-
-        alert(`Success! Invoice #${invData.INVOICE_ID} created.`);
-        
-        setPrintInvoiceData({
-          ...invData,
-          invoice_details: details
-        });
+        setPrintInvoiceData(result);
 
         setCart([]);
         setIsMobileCartOpen(false);
@@ -505,50 +464,22 @@ export default function POSPage() {
         isCredit = true;
       }
 
-      // Create Transaction
-      const { data: transData, error: transErr } = await supabase.from('transaction').insert([{
-        SUBTOTAL: grandTotal,
-        TAX_AMOUNT: 0,
+      const { createTransaction } = await import('@/actions/pos');
+
+      const transPayload = {
         GRAND_TOTAL: grandTotal,
-        DISCOUNT_AMOUNT: 0, // Baked into unit prices
-        ADJUSTED_TOTAL: grandTotal,
-        
         PAYMENT_METHOD: paymentMethod,
         CASH_AMOUNT: cashAmt,
         MPESA_AMOUNT: mpesaAmt,
         HYBRID_PAYMENT: paymentMethod === 'Hybrid',
-        
         IS_CREDIT: isCredit,
         CREDIT_CUSTOMER_ID: isCredit ? parseInt(creditCustomerId) : null,
         CREDIT_DUE_DATE: isCredit ? creditDueDate : null,
         CREDIT_TERMS: isCredit ? creditTerms : null,
-        
         CASH_TENDERED: isCredit ? 0 : grandTotal,
-        EMPLOYEE_ID: employeeId
-      }]).select().single();
+      };
 
-      if (transErr) throw transErr;
-
-      const details = cart.map(item => {
-        const effectivePrice = item.PRICE + (Number(item.adjustment) || 0);
-        return {
-          TRANS_ID: transData.TRANS_ID,
-          PRODUCT_ID: item.PRODUCT_ID,
-          QTY: item.quantity,
-          UNIT_PRICE: effectivePrice,
-          SUBTOTAL: effectivePrice * item.quantity
-        };
-      });
-
-      const { error: detErr } = await supabase.from('transaction_details').insert(details);
-      if (detErr) throw detErr;
-
-      await logAction({
-        action: 'Completed Sale',
-        details: `Transaction #${transData.TRANS_ID} completed via ${paymentMethod} for Ksh. ${grandTotal.toLocaleString()}`,
-        severity: 'info',
-        employeeId: employeeId
-      });
+      const transData = await createTransaction(transPayload, cart, employeeId);
 
       alert(`Success! Transaction #${transData.TRANS_ID} completed.`);
       

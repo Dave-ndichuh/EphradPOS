@@ -1,64 +1,115 @@
-import { supabase } from '@/lib/supabase';
+'use server';
 
-/**
- * ProductRepository
- * Strictly handles database access and queries.
- * Returns raw data directly from the DB.
- */
-export const productRepository = {
-  async getAllProducts() {
-    const { data, error } = await supabase
-      .from('product')
-      .select(`
-        *,
-        category(CNAME),
-        supplier(COMPANY_NAME)
-      `)
-      .order('PRODUCT_ID', { ascending: false });
-    
-    if (error) throw new Error(error.message);
-    return data || [];
-  },
+import prisma from '@/lib/prisma';
 
-  async getAllCategories() {
-    const { data, error } = await supabase
-      .from('category')
-      .select('*')
-      .order('CNAME', { ascending: true });
-    
-    if (error) throw new Error(error.message);
-    return data || [];
-  },
-
-  async getAllSuppliers() {
-    const { data, error } = await supabase.from('supplier').select('*');
-    if (error) throw new Error(error.message);
-    return data || [];
-  },
-
-  async createProduct(payload) {
-    const { data, error } = await supabase.from('product').insert([payload]).select();
-    if (error) throw new Error(error.message);
-    return data ? data[0] : null;
-  },
-
-  async updateProduct(id, payload) {
-    const { data, error } = await supabase.from('product').update(payload).eq('PRODUCT_ID', id).select();
-    if (error) throw new Error(error.message);
-    return data ? data[0] : null;
-  },
-
-  async deleteProduct(id) {
-    const { error } = await supabase.from('product').delete().eq('PRODUCT_ID', id);
-    if (error) {
-      if (error.code === '23503' || error.message.includes('foreign key constraint')) {
-        const { error: softError } = await supabase.from('product').update({ STATUS: 'inactive' }).eq('PRODUCT_ID', id);
-        if (softError) throw new Error(softError.message);
-        return { archived: true };
-      }
-      throw new Error(error.message);
-    }
-    return { success: true };
+export async function getAllProducts() {
+  try {
+    const data = await prisma.product.findMany({
+      include: {
+        category: {
+          select: { CNAME: true }
+        },
+        supplier: {
+          select: { COMPANY_NAME: true }
+        }
+      },
+      orderBy: { PRODUCT_ID: 'desc' }
+    });
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to fetch products');
   }
-};
+}
 
+export async function getAllCategories() {
+  try {
+    const data = await prisma.category.findMany({
+      orderBy: { CNAME: 'asc' }
+    });
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to fetch categories');
+  }
+}
+
+export async function getAllSuppliers() {
+  try {
+    const data = await prisma.supplier.findMany();
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to fetch suppliers');
+  }
+}
+
+export async function createProduct(payload) {
+  try {
+    const data = await prisma.product.create({
+      data: {
+        PRODUCT_CODE: payload.PRODUCT_CODE,
+        NAME: payload.NAME,
+        DESCRIPTION: payload.DESCRIPTION,
+        QTY_STOCK: payload.QTY_STOCK,
+        ON_HAND: payload.ON_HAND,
+        PRICE: payload.PRICE,
+        COST_PRICE: payload.COST_PRICE,
+        CATEGORY_ID: payload.CATEGORY_ID,
+        SUPPLIER_ID: payload.SUPPLIER_ID,
+        DATE_STOCK_IN: payload.DATE_STOCK_IN,
+        STATUS: payload.STATUS,
+        UOM: payload.UOM,
+        REORDER_THRESHOLD: payload.REORDER_THRESHOLD,
+        BARCODE: payload.BARCODE,
+        IMAGE_URL: payload.IMAGE_URL,
+        TAX_RATE: payload.TAX_RATE,
+        BRAND: payload.BRAND,
+        MODEL: payload.MODEL,
+        WEIGHT: payload.WEIGHT
+      }
+    });
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to create product');
+  }
+}
+
+export async function updateProduct(id, payload) {
+  try {
+    const data = await prisma.product.update({
+      where: { PRODUCT_ID: id },
+      data: payload
+    });
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to update product');
+  }
+}
+
+export async function deleteProduct(id) {
+  try {
+    await prisma.product.delete({
+      where: { PRODUCT_ID: id }
+    });
+    return { success: true };
+  } catch (error) {
+    // If there is a foreign key constraint violation (code P2003 in Prisma)
+    if (error.code === 'P2003') {
+      try {
+        await prisma.product.update({
+          where: { PRODUCT_ID: id },
+          data: { STATUS: 'inactive' }
+        });
+        return { archived: true };
+      } catch (softError) {
+        console.error(softError);
+        throw new Error('Failed to archive product');
+      }
+    }
+    console.error(error);
+    throw new Error('Failed to delete product');
+  }
+}

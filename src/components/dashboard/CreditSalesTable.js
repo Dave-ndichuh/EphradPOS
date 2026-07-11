@@ -8,6 +8,8 @@ import { createPortal } from 'react-dom';
 import { logAction } from '@/lib/logger';
 import { formatTransId } from '@/utils/formatters';
 
+import { getCreditSales, settleCreditSale } from '@/actions/creditSales';
+
 export default function CreditSalesTable() {
   const router = useRouter();
   const [creditSales, setCreditSales] = useState([]);
@@ -22,24 +24,13 @@ export default function CreditSalesTable() {
 
   const fetchCreditSales = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('transaction')
-      .select(`
-        TRANS_ID,
-        CREATED_AT,
-        ADJUSTED_TOTAL,
-        GRAND_TOTAL,
-        CREDIT_DUE_DATE,
-        CREDIT_TERMS,
-        IS_SETTLED,
-        credit_customer:customer!transaction_CREDIT_CUSTOMER_ID_fkey(FIRST_NAME, LAST_NAME)
-      `)
-      .eq('IS_CREDIT', true)
-      .eq('IS_SETTLED', false)
-      .order('CREDIT_DUE_DATE', { ascending: true });
-
-    if (!error && data) {
-      setCreditSales(data);
+    try {
+      const data = await getCreditSales();
+      if (data) {
+        setCreditSales(data);
+      }
+    } catch (err) {
+      console.error(err);
     }
     setLoading(false);
   };
@@ -63,88 +54,24 @@ export default function CreditSalesTable() {
     try {
       const transId = settlingSale.TRANS_ID;
 
-      if (settlementMode === 'Return') {
-        // 1. Fetch transaction details to restore stock
-        const { data: details, error: detailsError } = await supabase
-          .from('transaction_details')
-          .select('PRODUCT_ID, QTY')
-          .eq('TRANS_ID', transId);
-
-        if (detailsError) throw detailsError;
-
-        // 2. Restore stock for each item
-        if (details && details.length > 0) {
-          for (const item of details) {
-            // First fetch current ON_HAND
-            const { data: product } = await supabase
-              .from('product')
-              .select('ON_HAND')
-              .eq('PRODUCT_ID', item.PRODUCT_ID)
-              .single();
-
-            if (product) {
-              const newQty = (product.ON_HAND || 0) + item.QTY;
-              await supabase
-                .from('product')
-                .update({ ON_HAND: newQty })
-                .eq('PRODUCT_ID', item.PRODUCT_ID);
-            }
-          }
-        }
-
-        // 3. Mark transaction as returned and zero out totals so it doesn't affect profit
-        const { error } = await supabase
-          .from('transaction')
-          .update({ 
-            IS_SETTLED: true, 
-            PAYMENT_METHOD: 'Returned',
-            ADJUSTED_TOTAL: 0,
-            GRAND_TOTAL: 0,
-            CASH_AMOUNT: 0,
-            MPESA_AMOUNT: 0
-          })
-          .eq('TRANS_ID', transId);
-
-        if (error) throw error;
+      if (settlementMode === 'Hybrid') {
+        const cAmount = parseFloat(cashAmount) || 0;
+        const mAmount = parseFloat(mpesaAmount) || 0;
         
-        await logAction({
-          action: 'Returned Credit Sale',
-          details: `Transaction #TRX-${formatTransId(transId)} was returned. Items added back to stock and amounts zeroed out.`,
-          severity: 'warning'
-        });
-
-      } else {
-        // Normal settlement (Cash, M-Pesa, Hybrid)
-        let updateData = {
-          IS_SETTLED: true,
-          PAYMENT_METHOD: settlementMode
-        };
-
-        if (settlementMode === 'Hybrid') {
-          updateData.CASH_AMOUNT = parseFloat(cashAmount) || 0;
-          updateData.MPESA_AMOUNT = parseFloat(mpesaAmount) || 0;
-          
-          // Verify hybrid totals match
-          const totalPaid = updateData.CASH_AMOUNT + updateData.MPESA_AMOUNT;
-          const due = settlingSale.ADJUSTED_TOTAL || settlingSale.GRAND_TOTAL;
-          if (Math.abs(totalPaid - due) > 1) { // 1 Ksh tolerance
-            throw new Error(`Hybrid payment total (Ksh ${totalPaid}) must equal the amount due (Ksh ${due})`);
-          }
+        // Verify hybrid totals match
+        const totalPaid = cAmount + mAmount;
+        const due = settlingSale.ADJUSTED_TOTAL || settlingSale.GRAND_TOTAL;
+        if (Math.abs(totalPaid - due) > 1) { // 1 Ksh tolerance
+          throw new Error(`Hybrid payment total (Ksh ${totalPaid}) must equal the amount due (Ksh ${due})`);
         }
-
-        const { error } = await supabase
-          .from('transaction')
-          .update(updateData)
-          .eq('TRANS_ID', transId);
-
-        if (error) throw error;
-        
-        await logAction({
-          action: 'Settled Credit Sale',
-          details: `Transaction #TRX-${formatTransId(transId)} was settled via ${settlementMode}.`,
-          severity: 'info'
-        });
       }
+
+      await settleCreditSale(
+        transId, 
+        settlementMode, 
+        parseFloat(cashAmount) || 0, 
+        parseFloat(mpesaAmount) || 0
+      );
 
       setSettlingSale(null);
       fetchCreditSales();

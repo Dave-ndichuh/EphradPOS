@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { getDashboardMetrics } from '@/actions/dashboard';
 import { TrendingUp, DollarSign, Activity, ShoppingCart, PackageOpen, Tag, BarChart3, AlertTriangle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import MetricCard from '@/components/dashboard/MetricCard';
@@ -11,6 +12,7 @@ import CreditSalesTable from '@/components/dashboard/CreditSalesTable';
 
 export default function Dashboard() {
   const router = useRouter();
+  const { status } = useSession();
   const [loading, setLoading] = useState(true);
 
   // Metrics
@@ -30,148 +32,22 @@ export default function Dashboard() {
   const [paymentData, setPaymentData] = useState([]);
 
   useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+      return;
+    }
+    
+    if (status !== 'authenticated') return;
+
     const fetchDashboardData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
-        return;
-      }
-
       setLoading(true);
-
-      // Date ranges
-      const today = new Date();
-      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-      const sevenDaysAgo = new Date(today);
-      sevenDaysAgo.setDate(today.getDate() - 6); // Last 7 days including today
-      
       try {
-        // Fetch all products for stock value & low stock
-        const { data: products } = await supabase.from('product').select('PRODUCT_ID, NAME, ON_HAND, COST_PRICE');
-        
-        let stockVal = 0;
-        let lowStock = 0;
-        if (products) {
-          products.forEach(p => {
-            const onHand = Number(p.ON_HAND) || 0;
-            const cost = Number(p.COST_PRICE) || 0;
-            if (onHand > 0) stockVal += (onHand * cost);
-            if (onHand <= 5) lowStock++;
-          });
+        const data = await getDashboardMetrics();
+        if (data) {
+          setMetrics(data.metrics);
+          setSalesTrend(data.salesTrend);
+          setPaymentData(data.paymentData);
         }
-
-        // Fetch transactions for this month WITH details for profit math
-        const { data: currentMonthTrans } = await supabase
-          .from('transaction')
-          .select(`
-            *,
-            transaction_details (
-              PRODUCT_ID,
-              QTY,
-              UNIT_PRICE,
-              product (NAME, COST_PRICE)
-            )
-          `)
-          .gte('CREATED_AT', firstDayOfMonth)
-          .or('IS_CREDIT.eq.false,IS_SETTLED.eq.true')
-          .order('CREATED_AT', { ascending: true }); // Ascending helps with trend chart
-
-        let tSales = 0;
-        let tCost = 0;
-        let tCount = 0;
-        const productSales = {};
-        
-        // For Payment Breakdown Pie Chart
-        let cashTotal = 0;
-        let mpesaTotal = 0;
-        let creditTotal = 0;
-
-        // For Sales Trend Line Chart (Last 7 Days)
-        const trendMap = {};
-        for(let i=0; i<7; i++) {
-          const d = new Date(sevenDaysAgo);
-          d.setDate(d.getDate() + i);
-          const yyyy = d.getFullYear();
-          const mm = String(d.getMonth() + 1).padStart(2, '0');
-          const dd = String(d.getDate()).padStart(2, '0');
-          trendMap[`${yyyy}-${mm}-${dd}`] = 0;
-        }
-
-        if (currentMonthTrans) {
-          currentMonthTrans.forEach(t => {
-            // Locally filter out reversed transactions to prevent DB crashes if column is missing
-            if (t.status === 'Reversed') return;
-
-            // Skip purely voided or 0-value returns that shouldn't inflate count
-            const saleTotal = Number(t.ADJUSTED_TOTAL) || Number(t.GRAND_TOTAL) || 0;
-            tCount++;
-            tSales += saleTotal;
-
-            // Trend Chart
-            const tD = new Date(t.CREATED_AT);
-            const tDate = `${tD.getFullYear()}-${String(tD.getMonth() + 1).padStart(2, '0')}-${String(tD.getDate()).padStart(2, '0')}`;
-            
-            if (trendMap[tDate] !== undefined) {
-              trendMap[tDate] += saleTotal;
-            }
-
-            // Payment Methods
-            if (t.PAYMENT_METHOD === 'Cash') cashTotal += saleTotal;
-            else if (t.PAYMENT_METHOD === 'M-Pesa') mpesaTotal += saleTotal;
-            else if (t.PAYMENT_METHOD === 'Credit') creditTotal += saleTotal;
-            else if (t.PAYMENT_METHOD === 'Hybrid') {
-              cashTotal += Number(t.CASH_AMOUNT) || 0;
-              mpesaTotal += Number(t.MPESA_AMOUNT) || 0;
-            }
-
-            // Details for COGS & Top Product
-            if (t.transaction_details) {
-              t.transaction_details.forEach(d => {
-                const cost = Number(d.product?.COST_PRICE) || 0;
-                const qty = Number(d.QTY) || 0;
-                tCost += (cost * qty);
-
-                if (!productSales[d.PRODUCT_ID]) {
-                  productSales[d.PRODUCT_ID] = { name: d.product?.NAME || 'Unknown Part', qty: 0 };
-                }
-                productSales[d.PRODUCT_ID].qty += qty;
-              });
-            }
-          });
-        }
-
-        // Calculations
-        const grossProfit = tSales - tCost;
-        const profitMargin = tSales > 0 ? (grossProfit / tSales) * 100 : 0;
-        const atv = tCount > 0 ? tSales / tCount : 0;
-
-        const topP = Object.values(productSales).sort((a, b) => b.qty - a.qty)[0] || { name: 'N/A', units: 0 };
-
-        // Formatting Chart Data
-        const trendData = Object.keys(trendMap).sort().map(date => {
-          const [, month, day] = date.split('-');
-          return { name: `${day}/${month}`, Sales: trendMap[date] };
-        });
-
-        const payData = [
-          { name: 'Cash', value: cashTotal, color: '#3b82f6' },
-          { name: 'M-Pesa', value: mpesaTotal, color: '#25D366' },
-          { name: 'Credit', value: creditTotal, color: '#f59e0b' }
-        ].filter(d => d.value > 0);
-
-        setMetrics({
-          totalSales: tSales,
-          grossProfit,
-          profitMargin,
-          transactionCount: tCount,
-          atv,
-          stockValue: stockVal,
-          lowStockCount: lowStock,
-          topProduct: topP
-        });
-        setSalesTrend(trendData);
-        setPaymentData(payData);
-
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
       } finally {
@@ -180,7 +56,7 @@ export default function Dashboard() {
     };
 
     fetchDashboardData();
-  }, [router]);
+  }, [status, router]);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>Loading advanced analytics...</div>;

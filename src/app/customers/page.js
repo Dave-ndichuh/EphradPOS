@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Plus, Edit, Trash2, Search, X } from 'lucide-react';
 
 export default function CustomersPage() {
@@ -20,13 +19,14 @@ export default function CustomersPage() {
 
   const fetchCustomers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('customer')
-      .select('*')
-      .order('CUST_ID', { ascending: false });
-
-    if (!error && data) {
-      setCustomers(data);
+    try {
+      const { getCustomers } = await import('@/actions/customers');
+      const data = await getCustomers();
+      if (data) {
+        setCustomers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching customers:', error);
     }
     setLoading(false);
   };
@@ -37,8 +37,13 @@ export default function CustomersPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this customer?')) return;
-    await supabase.from('customer').delete().eq('CUST_ID', id);
-    fetchCustomers();
+    try {
+      const { deleteCustomer } = await import('@/actions/customers');
+      await deleteCustomer(id);
+      fetchCustomers();
+    } catch (error) {
+      alert('Error deleting customer: ' + error.message);
+    }
   };
 
   const openModal = (customer = null) => {
@@ -72,13 +77,18 @@ export default function CustomersPage() {
 
   const saveCustomer = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      await supabase.from('customer').update(formData).eq('CUST_ID', editingId);
-    } else {
-      await supabase.from('customer').insert([formData]);
+    try {
+      const { createCustomer, updateCustomer } = await import('@/actions/customers');
+      if (editingId) {
+        await updateCustomer(editingId, formData);
+      } else {
+        await createCustomer(formData);
+      }
+      setShowModal(false);
+      fetchCustomers();
+    } catch (error) {
+      alert('Error saving customer: ' + error.message);
     }
-    setShowModal(false);
-    fetchCustomers();
   };
 
   const filteredCustomers = customers.filter(c => 

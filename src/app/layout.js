@@ -3,6 +3,7 @@ import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
 import { ThemeProvider } from '@/context/ThemeContext';
 import AuthProvider from '@/components/AuthGuard';
+import Providers from '@/components/Providers';
 
 export const metadata = {
   title: 'Ephrad Technology',
@@ -21,19 +22,21 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <ThemeProvider>
-          <AuthProvider>
-            <div className="app-layout">
-              <Sidebar />
-              <div className="main-content">
-                <Topbar />
-                <main className="page-content">
-                  {children}
-                </main>
+        <Providers>
+          <ThemeProvider>
+            <AuthProvider>
+              <div className="app-layout">
+                <Sidebar />
+                <div className="main-content">
+                  <Topbar />
+                  <main className="page-content">
+                    {children}
+                  </main>
+                </div>
               </div>
-            </div>
-          </AuthProvider>
-        </ThemeProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );
