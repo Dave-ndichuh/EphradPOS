@@ -200,12 +200,12 @@ export default function EmployeeLoginPage() {
         @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }
         
         /* Logo Enhancement */
-        img[alt="Jobea Auto Logo"] {
+        img[alt="Ephrad POS Logo"] {
           display: inline-block;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        img[alt="Jobea Auto Logo"]:hover {
+        img[alt="Ephrad POS Logo"]:hover {
           filter: drop-shadow(0 8px 20px rgba(16, 185, 129, 0.25)) !important;
           opacity: 1 !important;
         }
@@ -299,7 +299,7 @@ export default function EmployeeLoginPage() {
         
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
-            <img src="/logo.png" alt="Jobea Auto Logo" style={{ height: '76px', objectFit: 'contain', filter: 'drop-shadow(0 6px 16px rgba(16, 185, 129, 0.2))', opacity: 0.95, transition: 'all 0.3s ease', transform: 'translateZ(0)' }} />
+            <img src="/logo.png" alt="Ephrad POS Logo" style={{ height: '76px', objectFit: 'contain', filter: 'drop-shadow(0 6px 16px rgba(16, 185, 129, 0.2))', opacity: 0.95, transition: 'all 0.3s ease', transform: 'translateZ(0)' }} />
           </div>
           <h1 style={{ fontSize: '3.5rem', fontWeight: 800, lineHeight: 1.1, marginBottom: '1rem', letterSpacing: '-0.02em' }}>
             Staff Access<br/>Terminal

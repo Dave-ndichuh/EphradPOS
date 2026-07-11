@@ -96,7 +96,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar glass-panel">
       <div className="sidebar-header" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-        <img src="/logo.png" alt="Jobea Auto Logo" style={{ height: '48px', borderRadius: '12px', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(16, 185, 129, 0.1))', opacity: 0.95, transition: 'all 0.3s ease' }} />
+        <img src="/logo.png" alt="Ephrad POS Logo" style={{ height: '48px', borderRadius: '12px', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(16, 185, 129, 0.1))', opacity: 0.95, transition: 'all 0.3s ease' }} />
       </div>
       
       <nav className="sidebar-nav">
@@ -125,7 +125,7 @@ export default function Sidebar() {
       </div>
 
       <div style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', color: 'var(--muted-foreground)', textAlign: 'center', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-        <span>&copy; {new Date().getFullYear()} Jobea Autos</span>
+        <span>&copy; {new Date().getFullYear()} Ephrad Enterprises Limited</span>
         <span>
           System by: <a href="https://machariandichu.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 }}>Nexus Solutions</a>
         </span>
