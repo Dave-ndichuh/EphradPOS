@@ -80,6 +80,8 @@ export default function LoginPage() {
           position: relative;
           z-index: 1;
           max-width: 480px;
+          text-align: center;
+          margin: 0 auto;
         }
 
         .feature-list {
@@ -99,6 +101,7 @@ export default function LoginPage() {
           border: 1px solid rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);
           transition: transform 0.2s ease;
+          text-align: left;
         }
         .feature-item:hover {
           transform: translateX(10px);
@@ -234,9 +237,9 @@ export default function LoginPage() {
       `}</style>
 
       {/* LEFT: Brand Panel */}
-      <div className="brand-panel">
+      <div className="brand-panel" style={{ alignItems: 'center' }}>
         <div className="brand-content">
-          <img src="/logo.png" alt="Ephrad POS Logo" style={{ height: '56px', marginBottom: '1.5rem', borderRadius: '8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
+          <img src="/logo.png" alt="Ephrad POS Logo" style={{ display: 'inline-block', height: '56px', marginBottom: '1.5rem', borderRadius: '8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.1, marginBottom: '0.75rem', letterSpacing: '-0.03em' }}>
             Executive<br/>Dashboard
           </h1>
@@ -269,8 +272,11 @@ export default function LoginPage() {
           </div>
         </div>
         
-        <div style={{ position: 'relative', zIndex: 1, fontSize: '0.875rem', color: '#64748B', marginTop: '1.5rem' }}>
-          &copy; {new Date().getFullYear()} Ephrad Enterprises Limited. All rights reserved.
+        <div style={{ position: 'relative', zIndex: 1, fontSize: '0.875rem', color: '#64748B', marginTop: '1.5rem', textAlign: 'center' }}>
+          <div>&copy; {new Date().getFullYear()} Ephrad Enterprises Limited. All rights reserved.</div>
+          <div style={{ marginTop: '0.5rem' }}>
+            System by: <a href="https://machariandichu.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ color: '#00B4D8', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }} onMouseEnter={(e) => e.target.style.color = '#FFFFFF'} onMouseLeave={(e) => e.target.style.color = '#00B4D8'}>Nexus Solutions</a>
+          </div>
         </div>
       </div>
 
