@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { Loader2, ArrowLeft, User, KeyRound, Delete } from 'lucide-react';
 import Link from 'next/link';
 import InstallPrompt from '@/components/InstallPrompt';

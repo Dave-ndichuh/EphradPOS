@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthGuard';
 import { Plus, Search, FileText, Printer, CheckCircle, XCircle, ChevronDown, Trash2 } from 'lucide-react';
 import InvoicePrint from '@/components/InvoicePrint';
@@ -59,20 +58,24 @@ export default function InvoicesPage() {
 
   const fetchInvoices = async () => {
     setLoading(true);
-    let query = supabase.from('invoice').select(`*, invoice_details(*)`).order('INVOICE_ID', { ascending: false });
-    
-    if (role === 'employee' && employeeId) {
-      query = query.eq('EMPLOYEE_ID', employeeId);
+    try {
+      const { getInvoices } = await import('@/actions/invoices');
+      const data = await getInvoices(role, employeeId);
+      if (data) setInvoices(data);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
     }
-    
-    const { data, error } = await query;
-    if (data) setInvoices(data);
     setLoading(false);
   };
 
   const fetchProducts = async () => {
-    const { data } = await supabase.from('product').select('*').eq('STATUS', 'active');
-    if (data) setProducts(data);
+    try {
+      const { getActiveProducts } = await import('@/actions/invoices');
+      const data = await getActiveProducts();
+      if (data) setProducts(data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
   };
 
   const addItem = (product) => {
@@ -119,48 +122,24 @@ export default function InvoicesPage() {
     setSaving(true);
     const { subtotal, tax, grandTotal } = calculateTotals();
 
-    const { data: invData, error: invError } = await supabase.from('invoice').insert([{
-      CUSTOMER_NAME: newInvoice.CUSTOMER_NAME,
-      CUSTOMER_PHONE: newInvoice.CUSTOMER_PHONE,
-      CUSTOMER_ADDRESS: newInvoice.CUSTOMER_ADDRESS,
-      CUSTOMER_EMAIL: newInvoice.CUSTOMER_EMAIL,
-      NOTES: newInvoice.NOTES,
-      SUBTOTAL: subtotal,
-      TAX_AMOUNT: tax,
-      GRAND_TOTAL: grandTotal,
-      STATUS: 'Pending',
-      EMPLOYEE_ID: employeeId
-    }]).select().single();
+    try {
+      const { createInvoice } = await import('@/actions/invoices');
+      await createInvoice({
+        ...newInvoice,
+        SUBTOTAL: subtotal,
+        TAX_AMOUNT: tax,
+        GRAND_TOTAL: grandTotal
+      }, invoiceItems, employeeId);
 
-    if (invError) {
-      alert("Failed to save invoice: " + invError.message);
-      setSaving(false);
-      return;
+      setShowCreateModal(false);
+      setNewInvoice({ CUSTOMER_NAME: '', CUSTOMER_PHONE: '', CUSTOMER_ADDRESS: '', CUSTOMER_EMAIL: '', NOTES: '' });
+      setInvoiceItems([]);
+      fetchInvoices();
+    } catch (error) {
+      alert("Failed to save invoice: " + error.message);
     }
 
-    const itemsToInsert = invoiceItems.map(i => ({
-      INVOICE_ID: invData.INVOICE_ID,
-      PRODUCT_ID: i.PRODUCT_ID,
-      DESCRIPTION: i.DESCRIPTION,
-      QTY: i.QTY,
-      UNIT_PRICE: i.UNIT_PRICE,
-      TOTAL_PRICE: i.TOTAL_PRICE
-    }));
-
-    await supabase.from('invoice_details').insert(itemsToInsert);
-
-    await logAction({
-      action: 'Created Invoice',
-      details: `Created Invoice #${invData.INVOICE_ID} for ${newInvoice.CUSTOMER_NAME}. Total: Ksh ${grandTotal.toLocaleString()}`,
-      severity: 'info',
-      employeeId: employeeId
-    });
-
     setSaving(false);
-    setShowCreateModal(false);
-    setNewInvoice({ CUSTOMER_NAME: '', CUSTOMER_PHONE: '', CUSTOMER_ADDRESS: '', CUSTOMER_EMAIL: '', NOTES: '' });
-    setInvoiceItems([]);
-    fetchInvoices();
   };
 
   const openSettleModal = (inv) => {
@@ -175,90 +154,33 @@ export default function InvoicesPage() {
     if (!settleInvoice) return;
     setSettling(true);
 
+    let cashAmt = 0;
+    let mpesaAmt = 0;
+
     if (paymentMethod === 'Hybrid') {
-      const cash = Number(hybridCash) || 0;
-      const mpesa = Number(hybridMpesa) || 0;
-      if (Math.abs((cash + mpesa) - settleInvoice.GRAND_TOTAL) > 0.01) {
+      cashAmt = Number(hybridCash) || 0;
+      mpesaAmt = Number(hybridMpesa) || 0;
+      if (Math.abs((cashAmt + mpesaAmt) - settleInvoice.GRAND_TOTAL) > 0.01) {
         alert(`Hybrid payments must equal exactly Ksh. ${settleInvoice.GRAND_TOTAL.toLocaleString()}`);
         setSettling(false);
         return;
       }
+    } else if (paymentMethod === 'Cash') {
+      cashAmt = settleInvoice.GRAND_TOTAL;
+    } else if (paymentMethod === 'M-Pesa') {
+      mpesaAmt = settleInvoice.GRAND_TOTAL;
     }
 
-    // Fetch full invoice details
-    const { data: inv } = await supabase.from('invoice').select('*, invoice_details(*)').eq('INVOICE_ID', settleInvoice.INVOICE_ID).single();
-    if (!inv) { setSettling(false); return; }
-
-    // 1. Check stock availability (but DO NOT use catalog price for transaction math)
-    for (let item of inv.invoice_details) {
-      const { data: pData } = await supabase.from('product').select('ON_HAND, NAME').eq('PRODUCT_ID', item.PRODUCT_ID).single();
-      if (pData) {
-        if (pData.ON_HAND < item.QTY) {
-          alert(`Insufficient stock for ${pData.NAME}. Available: ${pData.ON_HAND}, Required: ${item.QTY}`);
-          setSettling(false);
-          return;
-        }
-      }
+    try {
+      const { settleInvoicePayment } = await import('@/actions/invoices');
+      await settleInvoicePayment(settleInvoice.INVOICE_ID, paymentMethod, cashAmt, mpesaAmt, employeeId);
+      
+      fetchInvoices();
+      alert("Invoice paid and stock deducted successfully.");
+      setSettleInvoice(null);
+    } catch (error) {
+      alert("Failed to settle invoice: " + error.message);
     }
-
-    // Stock is deducted automatically via database trigger when transaction_details are inserted.
-
-    let cashAmt = 0;
-    let mpesaAmt = 0;
-    if (paymentMethod === 'Cash') cashAmt = inv.GRAND_TOTAL;
-    if (paymentMethod === 'M-Pesa') mpesaAmt = inv.GRAND_TOTAL;
-    if (paymentMethod === 'Hybrid') {
-      cashAmt = Number(hybridCash) || 0;
-      mpesaAmt = Number(hybridMpesa) || 0;
-    }
-
-    // 3. Create Transaction using exact Invoice math
-    const { data: tData, error: tErr } = await supabase.from('transaction').insert([{
-      EMPLOYEE_ID: employeeId || inv.EMPLOYEE_ID,
-      SUBTOTAL: inv.SUBTOTAL,
-      TAX_AMOUNT: inv.TAX_AMOUNT,
-      DISCOUNT_AMOUNT: 0,
-      GRAND_TOTAL: inv.GRAND_TOTAL,
-      ADJUSTED_TOTAL: inv.GRAND_TOTAL,
-      PAYMENT_METHOD: paymentMethod,
-      CASH_AMOUNT: cashAmt,
-      MPESA_AMOUNT: mpesaAmt,
-      HYBRID_PAYMENT: paymentMethod === 'Hybrid',
-      IS_CREDIT: false,
-      IS_SETTLED: true,
-      CASH_TENDERED: inv.GRAND_TOTAL,
-      CREDIT_TERMS: `INV-${inv.INVOICE_ID} | ${inv.CUSTOMER_NAME || 'Walk-in'}`
-    }]).select().single();
-
-    if (tErr) {
-       alert("Failed to create transaction: " + tErr.message);
-       setSettling(false);
-       return;
-    }
-
-    // Create Transaction Details
-    const tItems = inv.invoice_details.map(i => ({
-      TRANS_ID: tData.TRANS_ID,
-      PRODUCT_ID: i.PRODUCT_ID,
-      QTY: i.QTY,
-      UNIT_PRICE: i.UNIT_PRICE,
-      SUBTOTAL: i.TOTAL_PRICE
-    }));
-    await supabase.from('transaction_details').insert(tItems);
-
-    // 4. Update Invoice Status
-    await supabase.from('invoice').update({ STATUS: 'Paid' }).eq('INVOICE_ID', inv.INVOICE_ID);
-
-    await logAction({
-      action: 'Paid Invoice',
-      details: `Invoice #${inv.INVOICE_ID} marked as Paid via ${paymentMethod}. Transaction #${tData.TRANS_ID} generated.`,
-      severity: 'info',
-      employeeId: employeeId
-    });
-
-    fetchInvoices();
-    alert("Invoice paid and stock deducted successfully.");
-    setSettleInvoice(null);
     setSettling(false);
   };
 

@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Plus, Edit, Trash2, Search, X, Wrench, Calendar, Settings, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/components/AuthGuard';
 
 export default function ServicesPage() {
@@ -31,35 +29,33 @@ export default function ServicesPage() {
 
   const pendingAssignments = services.filter(s => s.EMPLOYEE_ID === employeeId && s.STATUS === 'Pending Assignment');
 
-  const updateServiceStatus = async (id, status) => {
-    const { error } = await supabase.from('service').update({ STATUS: status }).eq('SERVICE_ID', id);
-    if (!error) fetchServices();
-    else alert('Error updating status: ' + error.message);
+  const updateServiceStatusUI = async (id, status) => {
+    try {
+      const { updateServiceStatus } = await import('@/actions/services');
+      const result = await updateServiceStatus(id, status);
+      if (result.success) fetchServices();
+      else alert('Error updating status: ' + result.error);
+    } catch (e) {
+      alert('Error updating status: ' + e.message);
+    }
   };
 
   const fetchServices = async () => {
     setLoading(true);
     
-    let query = supabase.from('service')
-      .select(`*, customer(FIRST_NAME, LAST_NAME), employee(FIRST_NAME, LAST_NAME), service_details(DETAIL_ID, PRODUCT_ID, QTY, UNIT_PRICE, SUBTOTAL, product(NAME, BRAND, PRODUCT_CODE, MODEL))`)
-      .order('SERVICE_ID', { ascending: false });
-
-    if (role === 'employee' && employeeId) {
-      query = query.eq('EMPLOYEE_ID', employeeId);
+    try {
+      const { getServicesData } = await import('@/actions/services');
+      const res = await getServicesData(role, employeeId);
+      
+      if (res.success) {
+        setServices(res.data.services);
+        setCustomers(res.data.customers);
+        setEmployees(res.data.employees);
+        setProducts(res.data.products);
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error);
     }
-
-    // Fetch base data
-    const [srvRes, custRes, empRes, prodRes] = await Promise.all([
-      query,
-      supabase.from('customer').select('*'),
-      supabase.from('employee').select('*'),
-      supabase.from('product').select('*').gt('ON_HAND', 0)
-    ]);
-
-    if (srvRes.data) setServices(srvRes.data);
-    if (custRes.data) setCustomers(custRes.data);
-    if (empRes.data) setEmployees(empRes.data);
-    if (prodRes.data) setProducts(prodRes.data);
 
     setLoading(false);
   };
@@ -108,69 +104,31 @@ export default function ServicesPage() {
       payload.DATE_COMPLETED = new Date().toISOString();
     }
     
-    let errorMsg = null;
-    let newServiceId = editingId;
-
-    if (editingId) {
-      const { error } = await supabase.from('service').update(payload).eq('SERVICE_ID', editingId);
-      if (error) errorMsg = error.message;
-    } else {
-      const { data, error } = await supabase.from('service').insert([payload]).select().single();
-      if (error) errorMsg = error.message;
-      if (data) newServiceId = data.SERVICE_ID;
-    }
-    
-    if (errorMsg) {
-      alert(`Database Error: ${errorMsg}`);
-      return;
-    }
-
-    // Generate transaction if status changed to Completed
-    if (payload.STATUS === 'Completed' && originalStatus !== 'Completed' && editingId) {
-      const laborPrice = Number(payload.PRICE) || 0;
-      const partsTotal = serviceDetails.reduce((sum, d) => sum + Number(d.SUBTOTAL), 0);
-      const grandTotal = laborPrice + partsTotal;
-
-      const { data: transData, error: transErr } = await supabase.from('transaction').insert([{
-        SUBTOTAL: grandTotal,
-        TAX_AMOUNT: 0,
-        GRAND_TOTAL: grandTotal,
-        DISCOUNT_AMOUNT: 0,
-        ADJUSTED_TOTAL: grandTotal,
-        PAYMENT_METHOD: 'Pending Payment',
-        CASH_AMOUNT: 0,
-        MPESA_AMOUNT: 0,
-        HYBRID_PAYMENT: false,
-        IS_CREDIT: false,
-        IS_SETTLED: false,
-        CASH_TENDERED: 0,
-        EMPLOYEE_ID: payload.EMPLOYEE_ID || employeeId
-      }]).select().single();
-
-      if (!transErr && transData) {
-        const details = serviceDetails.map(item => ({
-          TRANS_ID: transData.TRANS_ID,
-          PRODUCT_ID: item.PRODUCT_ID,
-          QTY: item.QTY,
-          UNIT_PRICE: item.UNIT_PRICE,
-          SUBTOTAL: item.SUBTOTAL
-        }));
-        if (details.length > 0) {
-          await supabase.from('transaction_details').insert(details);
-        }
-        
-        // Stock is deducted automatically via database trigger when transaction_details are inserted.
+    try {
+      const { saveServiceAction } = await import('@/actions/services');
+      const result = await saveServiceAction(editingId, payload, serviceDetails, originalStatus, employeeId);
+      
+      if (!result.success) {
+        alert(`Database Error: ${result.error}`);
+        return;
       }
+      
+      setShowModal(false);
+      fetchServices();
+    } catch (e) {
+      alert(`Error: ${e.message}`);
     }
-    
-    setShowModal(false);
-    fetchServices();
   };
 
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this service ticket?')) {
-      await supabase.from('service').delete().eq('SERVICE_ID', id);
-      fetchServices();
+      try {
+        const { deleteServiceAction } = await import('@/actions/services');
+        await deleteServiceAction(id);
+        fetchServices();
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
     }
   };
 
@@ -184,32 +142,32 @@ export default function ServicesPage() {
     const prod = products.find(p => p.PRODUCT_ID === parseInt(selectedProduct));
     if (!prod) return;
 
-    const subtotal = prod.PRICE * qtyToAdd;
-
-    const { error } = await supabase.from('service_details').insert([{
-      SERVICE_ID: editingId,
-      PRODUCT_ID: prod.PRODUCT_ID,
-      QTY: qtyToAdd,
-      UNIT_PRICE: prod.PRICE,
-      SUBTOTAL: subtotal
-    }]);
-
-    if (error) {
-      alert(`Failed to add part: ${error.message}`);
-    } else {
-      const { data } = await supabase.from('service_details').select('*, product(NAME, BRAND, PRODUCT_CODE, MODEL)').eq('SERVICE_ID', editingId);
-      if (data) setServiceDetails(data);
-      setSelectedProduct('');
-      setQtyToAdd(1);
+    try {
+      const { addServicePart } = await import('@/actions/services');
+      const res = await addServicePart(editingId, prod.PRODUCT_ID, qtyToAdd, prod.PRICE);
+      
+      if (!res.success) {
+        alert(`Failed to add part: ${res.error}`);
+      } else {
+        setServiceDetails(res.data);
+        setSelectedProduct('');
+        setQtyToAdd(1);
+      }
+    } catch (e) {
+      alert('Error: ' + e.message);
     }
   };
 
   const removePart = async (detailId) => {
     if (confirm('Remove this part from the ticket?')) {
-      await supabase.from('service_details').delete().eq('DETAIL_ID', detailId);
-      if (editingId) {
-        const { data } = await supabase.from('service_details').select('*, product(NAME, BRAND, PRODUCT_CODE, MODEL)').eq('SERVICE_ID', editingId);
-        if (data) setServiceDetails(data);
+      try {
+        const { removeServicePart } = await import('@/actions/services');
+        const res = await removeServicePart(detailId, editingId);
+        if (res.success && res.data) {
+          setServiceDetails(res.data);
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
   };
@@ -248,8 +206,8 @@ export default function ServicesPage() {
                   <div className="text-muted" style={{ fontSize: '0.875rem' }}>Customer: {s.customer?.FIRST_NAME} {s.customer?.LAST_NAME} | Scheduled: {new Date(s.DATE_SCHEDULED).toLocaleDateString()}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button className="btn btn-secondary" style={{ borderColor: '#ef4444', color: '#ef4444' }} onClick={() => updateServiceStatus(s.SERVICE_ID, 'Declined')}>Decline</button>
-                  <button className="btn btn-primary" onClick={() => updateServiceStatus(s.SERVICE_ID, 'Scheduled')}>Accept</button>
+                  <button className="btn btn-secondary" style={{ borderColor: '#ef4444', color: '#ef4444' }} onClick={() => updateServiceStatusUI(s.SERVICE_ID, 'Declined')}>Decline</button>
+                  <button className="btn btn-primary" onClick={() => updateServiceStatusUI(s.SERVICE_ID, 'Scheduled')}>Accept</button>
                 </div>
               </div>
             ))}

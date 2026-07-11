@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { AlertTriangle, CheckCircle, ExternalLink, X, DollarSign, RefreshCw, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';

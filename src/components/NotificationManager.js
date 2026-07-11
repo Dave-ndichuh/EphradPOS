@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { AlertTriangle, Info, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -12,23 +11,12 @@ export default function NotificationManager({ children }) {
 
   useEffect(() => {
     const checkCreditDueDates = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data: unsettledCredits, error } = await supabase
-        .from('transaction')
-        .select(`
-          TRANS_ID,
-          CREDIT_DUE_DATE,
-          ADJUSTED_TOTAL,
-          GRAND_TOTAL,
-          credit_customer:customer!transaction_CREDIT_CUSTOMER_ID_fkey(FIRST_NAME, LAST_NAME)
-        `)
-        .eq('IS_CREDIT', true)
-        .eq('IS_SETTLED', false)
-        .not('CREDIT_DUE_DATE', 'is', null);
-
-      if (error || !unsettledCredits) return;
+      try {
+        const { getUnsettledCredits } = await import('@/actions/notifications');
+        const res = await getUnsettledCredits();
+        
+        if (!res.success || !res.data) return;
+        const unsettledCredits = res.data;
 
       const newNotifications = [];
       const today = new Date();
@@ -72,6 +60,9 @@ export default function NotificationManager({ children }) {
       });
 
       setNotifications(newNotifications);
+      } catch (error) {
+        console.error(error);
+      }
     };
 
     checkCreditDueDates();

@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import { User, Palette, Menu, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/context/ThemeContext';
 
 import { useAuth } from '@/components/AuthGuard';

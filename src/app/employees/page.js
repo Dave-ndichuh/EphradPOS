@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Plus, Edit, Trash2, Search, X } from 'lucide-react';
 
 export default function EmployeesPage() {
@@ -18,27 +17,17 @@ export default function EmployeesPage() {
   });
 
   const fetchEmployees = async () => {
-      const { data, error } = await supabase
-        .from('employee')
-        .select(`
-          *,
-          job(JOB_TITLE),
-          location(CITY, PROVINCE)
-        `)
-        .order('EMPLOYEE_ID', { ascending: false });
-
-      if (!error && data) {
-        setEmployees(data);
-      }
-
-      const { data: jobData } = await supabase.from('job').select('*');
-      if (jobData) setJobs(jobData);
-
-      const { data: locData } = await supabase.from('location').select('*');
-      if (locData) setLocations(locData);
-
-      setLoading(false);
-    };
+    try {
+      const { getEmployees } = await import('@/actions/employees');
+      const data = await getEmployees();
+      setEmployees(data.employees);
+      setJobs(data.jobs);
+      setLocations(data.locations);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     fetchEmployees();
@@ -68,89 +57,32 @@ export default function EmployeesPage() {
     e.preventDefault();
     setLoading(true);
 
-    // 1. Resolve or Create Job ID
-    let jobId = null;
-    if (formData.JOB_TITLE) {
-      const { data: existingJob } = await supabase.from('job').select('JOB_ID').ilike('JOB_TITLE', formData.JOB_TITLE).maybeSingle();
-      if (existingJob) {
-        jobId = existingJob.JOB_ID;
+    try {
+      const { saveEmployee: saveEmployeeAction } = await import('@/actions/employees');
+      const result = await saveEmployeeAction(editingId, formData);
+      
+      if (!result.success) {
+        alert(`Error: ${result.error}`);
       } else {
-        const { data: newJob } = await supabase.from('job').insert([{ JOB_TITLE: formData.JOB_TITLE }]).select().single();
-        jobId = newJob?.JOB_ID || null;
+        setShowModal(false);
+        fetchEmployees();
       }
-    }
-
-    // 2. Resolve or Create Location ID
-    let locId = null;
-    if (formData.LOCATION_CITY) {
-      const { data: existingLoc } = await supabase.from('location').select('LOCATION_ID').ilike('CITY', formData.LOCATION_CITY).maybeSingle();
-      if (existingLoc) {
-        locId = existingLoc.LOCATION_ID;
-      } else {
-        const { data: newLoc } = await supabase.from('location').insert([{ CITY: formData.LOCATION_CITY, PROVINCE: 'Custom' }]).select().single();
-        locId = newLoc?.LOCATION_ID || null;
-      }
-    }
-
-    const payload = {
-      FIRST_NAME: formData.FIRST_NAME,
-      LAST_NAME: formData.LAST_NAME,
-      GENDER: formData.GENDER,
-      EMAIL: formData.EMAIL,
-      PHONE_NUMBER: formData.PHONE_NUMBER,
-      JOB_ID: jobId,
-      LOCATION_ID: locId
-    };
-
-    let errorMsg = null;
-    if (editingId) {
-      // For edits, we just update the DB (PIN update not supported here yet to keep it simple, but we can update PIN in DB)
-      payload.PIN = formData.PIN;
-      const { error } = await supabase.from('employee').update(payload).eq('EMPLOYEE_ID', editingId);
-      if (error) errorMsg = error.message;
-    } else {
-      // For creation, use the secure backend API to create Supabase Auth User + DB record
-      const res = await fetch('/api/employees/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: formData.FIRST_NAME,
-          lastName: formData.LAST_NAME,
-          gender: formData.GENDER,
-          email: formData.EMAIL,
-          phone: formData.PHONE_NUMBER,
-          jobId: jobId,
-          locationId: locId,
-          pin: formData.PIN
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) errorMsg = data.error;
+    } catch (error) {
+      alert(`Error: ${error.message}`);
     }
     
     setLoading(false);
-    if (errorMsg) {
-      alert(`Error: ${errorMsg}`);
-      return;
-    }
-    
-    setShowModal(false);
-    fetchEmployees();
   };
 
   const deleteEmployee = async (id) => {
     if (confirm('Are you sure you want to delete this employee?')) {
       setLoading(true);
       try {
-        const res = await fetch('/api/employees/delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id })
-        });
-        const data = await res.json();
+        const { deleteEmployee: deleteEmployeeAction } = await import('@/actions/employees');
+        const result = await deleteEmployeeAction(id);
         
-        if (!res.ok) {
-          alert(`Delete Error: ${data.error}`);
+        if (!result.success) {
+          alert(`Delete Error: ${result.error}`);
         }
       } catch (err) {
         alert(`Delete Error: ${err.message}`);

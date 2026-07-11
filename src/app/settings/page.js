@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthGuard';
 import { Save, Mail, Lock, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -38,13 +37,19 @@ export default function SettingsPage() {
       return;
     }
 
-    const { error } = await supabase.auth.updateUser({ email });
-    
-    if (error) {
+    try {
+      const { updateAdminEmail } = await import('@/actions/settings');
+      const res = await updateAdminEmail(email);
+      
+      if (!res.success) {
+        setMessage({ type: 'error', text: res.error });
+      } else {
+        setMessage({ type: 'success', text: 'Email updated successfully.' });
+      }
+    } catch (error) {
       setMessage({ type: 'error', text: error.message });
-    } else {
-      setMessage({ type: 'success', text: 'Email update initiated. If secure email change is enabled, please check both your old and new inboxes for confirmation links.' });
     }
+    
     setLoadingEmail(false);
   };
 
@@ -65,15 +70,21 @@ export default function SettingsPage() {
       return;
     }
 
-    const { error } = await supabase.auth.updateUser({ password });
-    
-    if (error) {
+    try {
+      const { updateAdminPassword } = await import('@/actions/settings');
+      const res = await updateAdminPassword(password);
+      
+      if (!res.success) {
+        setMessage({ type: 'error', text: res.error });
+      } else {
+        setMessage({ type: 'success', text: 'Password updated successfully!' });
+        setPassword('');
+        setConfirmPassword('');
+      }
+    } catch (error) {
       setMessage({ type: 'error', text: error.message });
-    } else {
-      setMessage({ type: 'success', text: 'Password updated successfully!' });
-      setPassword('');
-      setConfirmPassword('');
     }
+    
     setLoadingPassword(false);
   };
 

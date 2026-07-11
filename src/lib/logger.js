@@ -1,4 +1,5 @@
-import { supabase } from './supabase';
+import prisma from '@/lib/prisma';
+import { getServerSession } from "next-auth/next";
 
 /**
  * Logs an action to the system_logs table
@@ -13,25 +14,27 @@ export async function logAction({ action, details, severity = 'info', employeeId
   try {
     // If neither employeeId nor userEmail is provided, try to fetch the current user session
     if (!employeeId && !userEmail) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        userEmail = session.user.email;
+      try {
+        const session = await getServerSession();
+        if (session?.user?.email) {
+          userEmail = session.user.email;
+        }
+      } catch (e) {
+        // getServerSession might fail if called outside a Next.js request context
+        console.warn('Could not retrieve session for logging', e);
       }
     }
 
-    const { error } = await supabase
-      .from('system_logs')
-      .insert([{
+    await prisma.system_logs.create({
+      data: {
         ACTION: action,
         DETAILS: details,
         SEVERITY: severity,
-        EMPLOYEE_ID: employeeId,
+        EMPLOYEE_ID: employeeId ? parseInt(employeeId) : null,
         USER_EMAIL: userEmail
-      }]);
+      }
+    });
 
-    if (error) {
-      console.error('Failed to write to system_logs:', error);
-    }
   } catch (err) {
     console.error('Exception writing to system_logs:', err);
   }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { BarChart3, TrendingUp, AlertCircle, PackageSearch, Download, DollarSign, Calendar, RefreshCcw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import { formatItemName } from '@/utils/formatters';
@@ -59,26 +58,18 @@ export default function ReportsPage() {
     const startDateTime = new Date(`${startDate}T00:00:00`).toISOString();
     const endDateTime = new Date(`${endDate}T23:59:59.999`).toISOString();
 
-    // 1. Fetch Transactions
-    const { data: transData } = await supabase
-      .from('transaction')
-      .select(`
-        *,
-        transaction_details (
-          PRODUCT_ID,
-          QTY,
-          UNIT_PRICE,
-          product (NAME, BRAND, PRODUCT_CODE, COST_PRICE, CATEGORY_ID, ON_HAND, category(CNAME))
-        )
-      `)
-      .gte('CREATED_AT', startDateTime)
-      .lte('CREATED_AT', endDateTime)
-      .or('IS_CREDIT.eq.false,IS_SETTLED.eq.true');
+    // Fetch Data
+    const { getReportData } = await import('@/actions/reports');
+    const result = await getReportData(startDateTime, endDateTime);
 
-    // 2. Fetch All Products (for dead stock and total stock value)
-    const { data: prodData } = await supabase
-      .from('product')
-      .select(`*, category(CNAME)`);
+    if (!result.success) {
+      console.error(result.error);
+      setLoading(false);
+      return;
+    }
+
+    const transData = result.transactions;
+    const prodData = result.products;
 
     let tSales = 0;
     let tCost = 0;

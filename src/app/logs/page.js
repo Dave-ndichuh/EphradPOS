@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthGuard';
 import { ShieldAlert, Info, AlertTriangle, Search, Clock, User, FileText, Trash2, X, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -20,17 +19,14 @@ export default function LogsPage() {
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('system_logs')
-      .select(`
-        *,
-        employee ( FIRST_NAME, LAST_NAME )
-      `)
-      .order('CREATED_AT', { ascending: false })
-      .limit(100);
-
-    if (!error && data) {
-      setLogs(data);
+    try {
+      const { getLogs } = await import('@/actions/logs');
+      const data = await getLogs();
+      if (data) {
+        setLogs(data);
+      }
+    } catch (error) {
+      console.error('Error fetching logs:', error);
     }
     setLoading(false);
   }, []);
@@ -50,37 +46,21 @@ export default function LogsPage() {
     e.preventDefault();
     setClearing(true);
     
-    // Verify admin password
-    const { error } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: adminPassword
-    });
-
-    if (error) {
-      alert('Incorrect password. Logs were not cleared.');
-      setClearing(false);
-      return;
-    }
-
-    // Password verified, clear logs (delete all where LOG_ID is not null)
-    const { error: clearError } = await supabase.from('system_logs').delete().not('LOG_ID', 'is', null);
-    
-    if (clearError) {
-      alert('Error clearing logs: ' + clearError.message);
-    } else {
-      // Add a log entry for this action
-      await supabase.from('system_logs').insert([{
-        USER_ID: user.id,
-        USER_EMAIL: user.email,
-        ACTION: 'Cleared System Logs',
-        DETAILS: 'Admin successfully verified password and cleared all system logs.',
-        SEVERITY: 'warning'
-      }]);
+    try {
+      const { clearLogs } = await import('@/actions/logs');
+      const result = await clearLogs(user.email, adminPassword);
       
-      setShowClearModal(false);
-      setAdminPassword('');
-      fetchLogs();
+      if (!result.success) {
+        alert(result.error + '. Logs were not cleared.');
+      } else {
+        setShowClearModal(false);
+        setAdminPassword('');
+        fetchLogs();
+      }
+    } catch (error) {
+      alert('Error clearing logs: ' + error.message);
     }
+    
     setClearing(false);
   };
 

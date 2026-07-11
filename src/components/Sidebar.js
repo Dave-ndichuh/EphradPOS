@@ -22,7 +22,6 @@ import {
   Truck,
   BarChart3
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
