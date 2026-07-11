@@ -182,26 +182,30 @@ export default function LoginPage() {
           transform: none;
         }
 
-        .switch-portal {
+        :global(.switch-portal) {
           display: inline-flex;
           align-items: center;
-          gap: 0.5rem;
-          margin-top: 2rem;
-          padding: 1rem;
-          border-radius: 12px;
-          background: rgba(0, 180, 216, 0.1);
-          color: #00B4D8;
-          font-weight: 600;
-          text-decoration: none;
-          transition: all 0.2s ease;
-          border: 1px solid rgba(0, 180, 216, 0.2);
-          width: 100%;
           justify-content: center;
+          gap: 0.75rem;
+          padding: 1rem 1.5rem;
+          width: 100%;
+          border-radius: 12px;
+          background: #FFFFFF;
+          color: #0A2463;
+          font-size: 1rem;
+          font-weight: 700;
+          text-decoration: none;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          border: 2px solid #E2E8F0;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        .switch-portal:hover {
-          background: rgba(0, 180, 216, 0.15);
-          transform: translateY(-1px);
+        :global(.switch-portal:hover) {
+          border-color: #00B4D8;
+          background: rgba(0, 180, 216, 0.05);
+          color: #00B4D8;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 15px -3px rgba(0, 180, 216, 0.15);
         }
 
         @media (max-width: 900px) {
@@ -314,18 +318,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div style={{ marginTop: '2.5rem', position: 'relative' }}>
-            <div style={{ position: 'absolute', inset: '0', display: 'flex', alignItems: 'center' }}>
-              <div style={{ width: '100%', borderTop: '1px solid #E2E8F0' }}></div>
-            </div>
-            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-              <span style={{ background: '#FAFAFA', padding: '0 1rem', fontSize: '0.875rem', color: '#94A3B8' }}>Staff Area</span>
-            </div>
+          <div style={{ width: '100%', marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #E2E8F0', textAlign: 'center' }}>
+            <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Are you a staff member?</p>
+            <Link href="/employee-login" className="switch-portal">
+              Go to Staff Terminal <ArrowRight size={18} />
+            </Link>
           </div>
-
-          <Link href="/employee-login" className="switch-portal">
-            Go to Staff Terminal <ArrowRight size={18} />
-          </Link>
           
         </div>
       </div>

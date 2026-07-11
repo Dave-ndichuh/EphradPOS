@@ -230,28 +230,32 @@ export default function EmployeeLoginPage() {
           transform: none;
         }
 
-        .admin-link {
-          position: absolute;
-          top: 2rem;
-          left: 2rem;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: rgba(255, 255, 255, 0.5);
-          text-decoration: none;
-          font-size: 0.875rem;
-          font-weight: 500;
-          padding: 0.5rem 1rem;
-          border-radius: 99px;
-          background: rgba(255, 255, 255, 0.05);
-          transition: all 0.2s ease;
-          z-index: 20;
-        }
+          :global(.switch-portal) {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+            padding: 1rem 1.5rem;
+            width: 100%;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #94A3B8;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          }
 
-        .admin-link:hover {
-          color: #FFFFFF;
-          background: rgba(255, 255, 255, 0.1);
-        }
+          :global(.switch-portal:hover) {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #FFFFFF;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
+          }
 
         @media (max-width: 600px) {
           .kiosk-layout {
@@ -261,23 +265,8 @@ export default function EmployeeLoginPage() {
             padding: 2rem 1.5rem;
             border-radius: 20px;
           }
-          .admin-link {
-            top: 1rem;
-            left: 1rem;
-            padding: 0.5rem;
-          }
-          .admin-link span {
-            display: none;
-          }
-          .keypad {
-            gap: 0.75rem;
-          }
         }
       `}</style>
-
-      <Link href="/login" className="admin-link">
-        <ArrowLeft size={16} /> <span>Admin Login</span>
-      </Link>
 
       <div className="kiosk-card animate-fade-in">
         
@@ -333,6 +322,13 @@ export default function EmployeeLoginPage() {
             )}
           </button>
         </form>
+
+        <div style={{ width: '100%', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+          <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '0.5rem' }}>System Administrator?</p>
+          <Link href="/login" className="switch-portal">
+            <ArrowLeft size={18} /> Return to Admin Portal
+          </Link>
+        </div>
       </div>
 
       <InstallPrompt />
