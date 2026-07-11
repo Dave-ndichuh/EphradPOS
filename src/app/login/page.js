@@ -108,7 +108,6 @@ export default function LoginPage() {
           background: rgba(255, 255, 255, 0.08);
         }
 
-        /* RIGHT FORM PANEL */
         .form-panel {
           flex: 1;
           display: flex;
@@ -116,13 +115,26 @@ export default function LoginPage() {
           justify-content: center;
           align-items: center;
           padding: 2rem;
-          background: #FAFAFA;
+          background-color: #F8FAFC;
+          background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
+          background-size: 24px 24px;
           position: relative;
+        }
+
+        .form-card {
+          width: 100%;
+          max-width: 440px;
+          background: linear-gradient(145deg, #FFFFFF 0%, #FFF0F2 100%);
+          padding: 3rem 2.5rem;
+          border-radius: 24px;
+          border: 1px solid rgba(217, 4, 41, 0.1);
+          box-shadow: 0 25px 50px -12px rgba(217, 4, 41, 0.08), 0 0 0 1px rgba(217, 4, 41, 0.05);
+          position: relative;
+          z-index: 10;
         }
 
         .form-wrapper {
           width: 100%;
-          max-width: 420px;
         }
 
         .login-input {
@@ -229,7 +241,8 @@ export default function LoginPage() {
           }
         @media (max-height: 768px) {
           .brand-panel { padding: 1.5rem; }
-          .form-panel { padding: 1.5rem; }
+          .form-panel { padding: 1.5rem; background-size: 20px 20px; }
+          .form-card { padding: 2rem 1.5rem; }
           .feature-item { padding: 0.75rem; }
           .feature-list { gap: 0.75rem; }
           .brand-content h1 { font-size: 2rem !important; }
@@ -282,62 +295,67 @@ export default function LoginPage() {
 
       {/* RIGHT: Form Panel */}
       <div className="form-panel">
-        <div className="form-wrapper">
-          
-          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0A2463', marginBottom: '0.25rem' }}>Welcome Back</h2>
-            <p style={{ color: '#64748B', fontSize: '0.95rem' }}>Enter your credentials to access the admin portal.</p>
-          </div>
-
-          {error && (
-            <div style={{ padding: '1rem', background: 'rgba(217, 4, 41, 0.1)', border: '1px solid rgba(217, 4, 41, 0.2)', borderRadius: '12px', color: '#D90429', fontSize: '0.875rem', textAlign: 'center', marginBottom: '1.5rem', fontWeight: 500 }}>
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="form-card animate-fade-in">
+          <div className="form-wrapper">
             
-            <div className="input-group" style={{ position: 'relative' }}>
-              <Mail className="input-icon" size={20} />
-              <input
-                type="email"
-                className="login-input"
-                placeholder="Admin Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+            <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', background: 'rgba(217, 4, 41, 0.08)', borderRadius: '16px', marginBottom: '1.25rem' }}>
+                <Lock size={28} color="#D90429" />
+              </div>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0A2463', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Welcome Back</h2>
+              <p style={{ color: '#64748B', fontSize: '0.95rem' }}>Enter your credentials to access the admin portal.</p>
             </div>
 
-            <div className="input-group" style={{ position: 'relative' }}>
-              <Lock className="input-icon" size={20} />
-              <input
-                type="password"
-                className="login-input"
-                placeholder="Secure Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+            {error && (
+              <div style={{ padding: '1rem', background: 'rgba(217, 4, 41, 0.1)', border: '1px solid rgba(217, 4, 41, 0.2)', borderRadius: '12px', color: '#D90429', fontSize: '0.875rem', textAlign: 'center', marginBottom: '1.5rem', fontWeight: 500 }}>
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              
+              <div className="input-group" style={{ position: 'relative' }}>
+                <Mail className="input-icon" size={20} />
+                <input
+                  type="email"
+                  className="login-input"
+                  placeholder="Admin Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="input-group" style={{ position: 'relative' }}>
+                <Lock className="input-icon" size={20} />
+                <input
+                  type="password"
+                  className="login-input"
+                  placeholder="Secure Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                className="login-btn"
+                disabled={loading}
+                style={{ marginTop: '0.5rem' }}
+              >
+                {loading ? <Loader2 size={20} className="animate-spin" /> : 'Authenticate'}
+              </button>
+            </form>
+
+            <div style={{ width: '100%', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #E2E8F0', textAlign: 'center' }}>
+              <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Are you a staff member?</p>
+              <Link href="/employee-login" className="switch-portal">
+                Go to Staff Terminal <ArrowRight size={18} />
+              </Link>
             </div>
-
-            <button 
-              type="submit" 
-              className="login-btn"
-              disabled={loading}
-              style={{ marginTop: '0.5rem' }}
-            >
-              {loading ? <Loader2 size={20} className="animate-spin" /> : 'Authenticate'}
-            </button>
-          </form>
-
-          <div style={{ width: '100%', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #E2E8F0', textAlign: 'center' }}>
-            <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Are you a staff member?</p>
-            <Link href="/employee-login" className="switch-portal">
-              Go to Staff Terminal <ArrowRight size={18} />
-            </Link>
+            
           </div>
-          
         </div>
       </div>
 

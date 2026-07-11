@@ -70,32 +70,55 @@ export default function EmployeeLoginPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: #0A0A0A;
-          background-image: 
-            radial-gradient(circle at 50% 0%, rgba(0, 180, 216, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 50% 100%, rgba(10, 36, 99, 0.4) 0%, transparent 50%),
-            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-          background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+          background-color: #020817;
           padding: 2rem;
           position: relative;
           overflow: hidden;
         }
 
+        .ambient-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(100px);
+          z-index: 0;
+          animation: floatOrb 25s infinite ease-in-out alternate;
+        }
+
+        .orb-1 {
+          top: -10%; left: -10%;
+          width: 60vw; height: 60vw;
+          background: radial-gradient(circle, rgba(0, 180, 216, 0.35) 0%, transparent 60%);
+        }
+
+        .orb-2 {
+          bottom: -20%; right: -10%;
+          width: 70vw; height: 70vw;
+          background: radial-gradient(circle, rgba(217, 4, 41, 0.25) 0%, transparent 60%);
+          animation-direction: alternate-reverse;
+          animation-duration: 35s;
+        }
+
+        @keyframes floatOrb {
+          0% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(5vw, 10vh) scale(1.1); }
+          100% { transform: translate(-5vw, -5vh) scale(0.9); }
+        }
+
         .kiosk-card {
           width: 100%;
           max-width: 500px;
-          background: rgba(15, 23, 42, 0.6);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(10, 36, 99, 0.5);
+          backdrop-filter: blur(30px);
+          -webkit-backdrop-filter: blur(30px);
+          border: 1px solid rgba(0, 180, 216, 0.3);
           border-radius: 24px;
           padding: 2rem;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 180, 216, 0.15) inset;
           z-index: 10;
           display: flex;
           flex-direction: column;
           align-items: center;
+          position: relative;
         }
 
         .logo-container {
@@ -161,17 +184,17 @@ export default function EmployeeLoginPage() {
 
         .keypad-btn {
           height: 64px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 12px;
           font-size: 1.5rem;
-          font-weight: 500;
-          color: #F8FAFC;
+          font-weight: 600;
+          color: #FFFFFF;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.15s ease;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           user-select: none;
           -webkit-tap-highlight-color: transparent;
         }
@@ -278,6 +301,10 @@ export default function EmployeeLoginPage() {
           div[style*="marginTop: '1.5rem'"] { margin-top: 1rem !important; padding-top: 1rem !important; }
         }
       `}</style>
+
+      {/* Dynamic Background Orbs */}
+      <div className="ambient-orb orb-1"></div>
+      <div className="ambient-orb orb-2"></div>
 
       <div className="kiosk-card animate-fade-in">
         
