@@ -2,9 +2,10 @@
 
 import prisma from '@/lib/prisma';
 
-export async function getLogs() {
+export async function getLogs(branchId) {
   try {
     const data = await prisma.system_logs.findMany({
+      where: branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {},
       orderBy: { TIMESTAMP: 'desc' },
       take: 100
     });
@@ -15,7 +16,7 @@ export async function getLogs() {
   }
 }
 
-export async function clearLogs(adminEmail, adminPassword) {
+export async function clearLogs(adminEmail, adminPassword, branchId) {
   try {
     // 1. Verify Admin Password
     const adminUser = await prisma.users.findFirst({
@@ -39,13 +40,16 @@ export async function clearLogs(adminEmail, adminPassword) {
     }
 
     // 2. Clear Logs
-    await prisma.system_logs.deleteMany({});
+    await prisma.system_logs.deleteMany({
+      where: branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {}
+    });
 
     // 3. Log the clear action itself
     await prisma.system_logs.create({
       data: {
         USER_ID: adminUser ? parseInt(adminUser.ID, 10) : null,
-        ACTION: 'Cleared System Logs - Admin successfully verified password and cleared all system logs.'
+        ACTION: 'Cleared System Logs - Admin successfully verified password and cleared all system logs.',
+        BRANCH_ID: branchId ? parseInt(branchId, 10) : null
       }
     });
 

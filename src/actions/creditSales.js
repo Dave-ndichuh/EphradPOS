@@ -4,12 +4,13 @@ import prisma from '@/lib/prisma';
 import { logAction } from '@/lib/logger';
 import { formatTransId } from '@/utils/formatters';
 
-export async function getCreditSales() {
+export async function getCreditSales(branchId) {
   try {
     const data = await prisma.transaction.findMany({
       where: {
         IS_CREDIT: true,
-        IS_SETTLED: false
+        IS_SETTLED: false,
+        ...(branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {})
       },
       select: {
         TRANS_ID: true,

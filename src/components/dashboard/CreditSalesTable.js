@@ -8,9 +8,11 @@ import { logAction } from '@/lib/logger';
 import { formatTransId } from '@/utils/formatters';
 
 import { getCreditSales, settleCreditSale } from '@/actions/creditSales';
+import { useBranch } from '@/context/BranchContext';
 
 export default function CreditSalesTable() {
   const router = useRouter();
+  const { currentBranchId } = useBranch();
   const [creditSales, setCreditSales] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +26,7 @@ export default function CreditSalesTable() {
   const fetchCreditSales = async () => {
     setLoading(true);
     try {
-      const data = await getCreditSales();
+      const data = await getCreditSales(currentBranchId);
       if (data) {
         setCreditSales(data);
       }
@@ -36,7 +38,7 @@ export default function CreditSalesTable() {
 
   useEffect(() => {
     fetchCreditSales();
-  }, []);
+  }, [currentBranchId]);
 
   const openSettlementModal = (sale) => {
     setSettlingSale(sale);

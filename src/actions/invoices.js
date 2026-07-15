@@ -3,11 +3,15 @@
 import prisma from '@/lib/prisma';
 import { logAction } from '@/lib/logger';
 
-export async function getInvoices(role, employeeId) {
+export async function getInvoices(role, employeeId, branchId) {
   try {
-    const where = (role === 'employee' && employeeId) 
-      ? { EMPLOYEE_ID: employeeId }
-      : {};
+    const where = {};
+    if (role === 'employee' && employeeId) {
+      where.EMPLOYEE_ID = employeeId;
+    }
+    if (branchId) {
+      where.BRANCH_ID = parseInt(branchId, 10);
+    }
 
     const data = await prisma.invoice.findMany({
       where,
@@ -36,10 +40,13 @@ export async function getInvoices(role, employeeId) {
   }
 }
 
-export async function getActiveProducts() {
+export async function getActiveProducts(branchId) {
   try {
     const data = await prisma.product.findMany({
-      where: { STATUS: 'active' }
+      where: { 
+        STATUS: 'active',
+        ...(branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {})
+      }
     });
     return data.map(p => ({
       ...p,
@@ -53,7 +60,7 @@ export async function getActiveProducts() {
   }
 }
 
-export async function createInvoice(invoiceData, items, employeeId) {
+export async function createInvoice(invoiceData, items, employeeId, branchId) {
   try {
     return await prisma.$transaction(async (tx) => {
       // 1. Create Invoice
@@ -68,7 +75,8 @@ export async function createInvoice(invoiceData, items, employeeId) {
           TAX_AMOUNT: invoiceData.TAX_AMOUNT,
           GRAND_TOTAL: invoiceData.GRAND_TOTAL,
           STATUS: 'Pending',
-          EMPLOYEE_ID: employeeId
+          EMPLOYEE_ID: employeeId,
+          BRANCH_ID: branchId ? parseInt(branchId, 10) : null
         }
       });
 
@@ -102,7 +110,7 @@ export async function createInvoice(invoiceData, items, employeeId) {
   }
 }
 
-export async function settleInvoicePayment(invoiceId, paymentMethod, cashAmt, mpesaAmt, employeeId) {
+export async function settleInvoicePayment(invoiceId, paymentMethod, cashAmt, mpesaAmt, employeeId, branchId) {
   try {
     return await prisma.$transaction(async (tx) => {
       // 1. Fetch full invoice details
@@ -143,7 +151,8 @@ export async function settleInvoicePayment(invoiceId, paymentMethod, cashAmt, mp
           IS_CREDIT: false,
           IS_SETTLED: true,
           CASH_TENDERED: inv.GRAND_TOTAL,
-          CREDIT_TERMS: `INV-${inv.INVOICE_ID} | ${inv.CUSTOMER_NAME || 'Walk-in'}`
+          CREDIT_TERMS: `INV-${inv.INVOICE_ID} | ${inv.CUSTOMER_NAME || 'Walk-in'}`,
+          BRANCH_ID: branchId ? parseInt(branchId, 10) : inv.BRANCH_ID
         }
       });
 

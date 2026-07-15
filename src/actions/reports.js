@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 
-export async function getReportData(startDateTime, endDateTime) {
+export async function getReportData(startDateTime, endDateTime, branchId) {
   try {
     // 1. Fetch Transactions
     const transactions = await prisma.transaction.findMany({
@@ -11,6 +11,7 @@ export async function getReportData(startDateTime, endDateTime) {
           gte: new Date(startDateTime),
           lte: new Date(endDateTime)
         },
+        ...(branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {}),
         OR: [
           { IS_CREDIT: false },
           { IS_SETTLED: true }
@@ -31,6 +32,7 @@ export async function getReportData(startDateTime, endDateTime) {
 
     // 2. Fetch All Products
     const products = await prisma.product.findMany({
+      where: branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {},
       include: {
         category: true
       }

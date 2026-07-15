@@ -3,6 +3,7 @@ import LayoutWrapper from '@/components/LayoutWrapper';
 import { ThemeProvider } from '@/context/ThemeContext';
 import AuthProvider from '@/components/AuthGuard';
 import Providers from '@/components/Providers';
+import { BranchProvider } from '@/context/BranchContext';
 
 export const metadata = {
   title: 'Ephrad Technology',
@@ -23,11 +24,13 @@ export default function RootLayout({ children }) {
       <body>
         <Providers>
           <ThemeProvider>
-            <AuthProvider>
-              <LayoutWrapper>
-                {children}
-              </LayoutWrapper>
-            </AuthProvider>
+            <BranchProvider>
+              <AuthProvider>
+                <LayoutWrapper>
+                  {children}
+                </LayoutWrapper>
+              </AuthProvider>
+            </BranchProvider>
           </ThemeProvider>
         </Providers>
       </body>

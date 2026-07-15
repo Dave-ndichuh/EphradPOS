@@ -2,9 +2,10 @@
 
 import prisma from '@/lib/prisma';
 
-export async function getAllProducts() {
+export async function getAllProducts(branchId) {
   try {
     const data = await prisma.product.findMany({
+      where: branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {},
       include: {
         category: {
           select: { CNAME: true }
@@ -49,13 +50,14 @@ export async function getAllSuppliers() {
   }
 }
 
-export async function createProduct(payload) {
+export async function createProduct(payload, branchId) {
   try {
     const data = await prisma.product.create({
       data: {
         PRODUCT_CODE: payload.PRODUCT_CODE,
         NAME: payload.NAME,
         DESCRIPTION: payload.DESCRIPTION,
+        BRANCH_ID: branchId ? parseInt(branchId, 10) : null,
         QTY_STOCK: payload.QTY_STOCK,
         ON_HAND: payload.ON_HAND,
         PRICE: payload.PRICE,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useBranch } from '@/context/BranchContext';
 import { getDashboardMetrics } from '@/actions/dashboard';
 import { TrendingUp, DollarSign, Activity, ShoppingCart, PackageOpen, Tag, BarChart3, AlertTriangle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
@@ -13,6 +14,7 @@ import CreditSalesTable from '@/components/dashboard/CreditSalesTable';
 export default function Dashboard() {
   const router = useRouter();
   const { status } = useSession();
+  const { currentBranchId } = useBranch();
   const [loading, setLoading] = useState(true);
 
   // Metrics
@@ -42,7 +44,7 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        const data = await getDashboardMetrics();
+        const data = await getDashboardMetrics(currentBranchId);
         if (data) {
           setMetrics(data.metrics);
           setSalesTrend(data.salesTrend);
@@ -56,7 +58,7 @@ export default function Dashboard() {
     };
 
     fetchDashboardData();
-  }, [status, router]);
+  }, [status, router, currentBranchId]);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>Loading advanced analytics...</div>;

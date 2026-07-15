@@ -6,10 +6,10 @@ import { mapToProductEntity, mapFromProductForm } from '@/core/entities/Product'
  * Pure business logic layer. Orchestrates repositories and handles business rules.
  */
 export const ProductService = {
-  async fetchAllData() {
+  async fetchAllData(branchId) {
     // Fetch products, categories, and suppliers concurrently
     const [rawProducts, categories, suppliers] = await Promise.all([
-      getAllProducts(),
+      getAllProducts(branchId),
       getAllCategories(),
       getAllSuppliers()
     ]);
@@ -20,7 +20,7 @@ export const ProductService = {
     return { products, categories, suppliers };
   },
 
-  async saveProduct(id, formData) {
+  async saveProduct(id, formData, branchId) {
     const payload = mapFromProductForm(formData);
     
     // In update mode, DATE_STOCK_IN usually shouldn't be overridden unless intended, 
@@ -29,7 +29,7 @@ export const ProductService = {
       delete payload.DATE_STOCK_IN; // Ensure we don't overwrite creation date on update
       return await updateProduct(id, payload);
     } else {
-      return await createProduct(payload);
+      return await createProduct(payload, branchId);
     }
   },
 

@@ -8,6 +8,7 @@ import Receipt from '@/components/Receipt';
 import InvoicePrint from '@/components/InvoicePrint';
 import ThermalInvoice from '@/components/ThermalInvoice';
 import { useAuth } from '@/components/AuthGuard';
+import { useBranch } from '@/context/BranchContext';
 import { logAction } from '@/lib/logger';
 import { formatItemName } from '@/utils/formatters';
 
@@ -70,6 +71,7 @@ export default function POSPage() {
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quoteData, setQuoteData] = useState(null);
   const { employeeId } = useAuth();
+  const { currentBranchId } = useBranch();
   
   const [isMobile, setIsMobile] = useState(false);
 
@@ -103,7 +105,7 @@ export default function POSPage() {
     setFetchError(null);
     try {
       const { getPosData } = await import('@/actions/pos');
-      const { products, categories, customers } = await getPosData();
+      const { products, categories, customers } = await getPosData(currentBranchId);
       if (products) setProducts(products);
       if (categories) setCategories(categories);
       if (customers) setCustomers(customers);
@@ -116,7 +118,7 @@ export default function POSPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentBranchId]);
 
   // Global Barcode Scanner Listener
   useEffect(() => {
@@ -435,7 +437,7 @@ export default function POSPage() {
           SUBTOTAL: grandTotal
         };
 
-        const result = await createInvoice(invoiceData, cart, employeeId);
+        const result = await createInvoice(invoiceData, cart, employeeId, currentBranchId);
         alert(`Success! Invoice #${result.INVOICE_ID} created.`);
         
         setPrintInvoiceData(result);
@@ -479,7 +481,7 @@ export default function POSPage() {
         CASH_TENDERED: isCredit ? 0 : grandTotal,
       };
 
-      const transData = await createTransaction(transPayload, cart, employeeId);
+      const transData = await createTransaction(transPayload, cart, employeeId, currentBranchId);
 
       alert(`Success! Transaction #${transData.TRANS_ID} completed.`);
       

@@ -7,7 +7,7 @@ import { logAction } from '@/lib/logger';
  * Bridges the gap between UI components and Application business logic.
  * Handles React state, loading states, error boundaries, and orchestration.
  */
-export function useProducts() {
+export function useProducts(branchId) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -18,7 +18,7 @@ export function useProducts() {
     setLoading(true);
     setError(null);
     try {
-      const data = await ProductService.fetchAllData();
+      const data = await ProductService.fetchAllData(branchId);
       setProducts(data.products);
       setCategories(data.categories);
       setSuppliers(data.suppliers);
@@ -36,7 +36,7 @@ export function useProducts() {
 
   const saveProduct = async (id, formData) => {
     try {
-      await ProductService.saveProduct(id, formData);
+      await ProductService.saveProduct(id, formData, branchId);
       
       await logAction({
         action: id ? 'Updated Product' : 'Added Product',

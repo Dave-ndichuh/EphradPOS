@@ -6,12 +6,23 @@ import { useEffect, useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 
 import { useAuth } from '@/components/AuthGuard';
+import { useBranch } from '@/context/BranchContext';
+import { getBranches } from '@/actions/branch';
 
 export default function Topbar() {
   const pathname = usePathname();
   const { theme, changeTheme } = useTheme();
   const { user } = useAuth();
+  const { currentBranchName, currentBranchId, setBranch } = useBranch();
+  const [branches, setBranches] = useState([]);
   const userEmail = user?.email || '';
+  const isAdmin = user?.role === 'admin';
+
+  useEffect(() => {
+    if (isAdmin) {
+      getBranches().then(setBranches);
+    }
+  }, [isAdmin]);
 
   // Hide topbar on login pages
   if (pathname === '/login' || pathname === '/employee-login') return null;
@@ -56,6 +67,27 @@ export default function Topbar() {
         >
           <RefreshCw size={16} />
         </button>
+
+        {/* Branch Switcher (Admin Only) or Static Label */}
+        {isAdmin ? (
+          <select 
+            value={currentBranchId || ''}
+            onChange={(e) => {
+              const b = branches.find(x => x.BRANCH_ID === parseInt(e.target.value, 10));
+              if (b) setBranch(b.BRANCH_ID, b.NAME);
+            }}
+            className="input"
+            style={{ padding: '0.25rem 0.75rem', borderRadius: '8px', minWidth: '150px' }}
+          >
+            {branches.map(b => (
+              <option key={b.BRANCH_ID} value={b.BRANCH_ID}>{b.NAME}</option>
+            ))}
+          </select>
+        ) : (
+          <div style={{ background: 'var(--card)', padding: '0.25rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem' }}>
+            {currentBranchName}
+          </div>
+        )}
 
         {/* Theme Switcher */}
         <div className="theme-switcher-container">

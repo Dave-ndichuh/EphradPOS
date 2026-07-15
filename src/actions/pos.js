@@ -3,10 +3,10 @@
 import prisma from '@/lib/prisma';
 import { logAction } from '@/lib/logger';
 
-export async function getPosData() {
+export async function getPosData(branchId) {
   try {
     const [products, categories, customers] = await Promise.all([
-      prisma.product.findMany(),
+      prisma.product.findMany(branchId ? { where: { BRANCH_ID: parseInt(branchId, 10) } } : {}),
       prisma.category.findMany({ orderBy: { CNAME: 'asc' } }),
       prisma.customer.findMany()
     ]);
@@ -40,7 +40,7 @@ export async function createCustomer(data) {
   }
 }
 
-export async function createInvoice(data, cart, employeeId) {
+export async function createInvoice(data, cart, employeeId, branchId) {
   try {
     return await prisma.$transaction(async (tx) => {
       // 1. Create Invoice
@@ -48,7 +48,8 @@ export async function createInvoice(data, cart, employeeId) {
         data: {
           CUST_ID: data.CUST_ID,
           TOTAL_AMOUNT: data.SUBTOTAL, // Using SUBTOTAL as total
-          STATUS: 'Pending'
+          STATUS: 'Pending',
+          BRANCH_ID: branchId ? parseInt(branchId, 10) : null
         }
       });
 
@@ -93,7 +94,7 @@ function itemNameFromId(cart, id) {
   return item ? (item.NAME + (item.BRAND ? ' ' + item.BRAND : '')) : 'Item';
 }
 
-export async function createTransaction(data, cart, employeeId) {
+export async function createTransaction(data, cart, employeeId, branchId) {
   try {
     return await prisma.$transaction(async (tx) => {
       // 1. Create Transaction
@@ -102,6 +103,7 @@ export async function createTransaction(data, cart, employeeId) {
           SUBTOTAL: data.GRAND_TOTAL,
           GRAND_TOTAL: data.GRAND_TOTAL,
           ADJUSTED_TOTAL: data.GRAND_TOTAL,
+          BRANCH_ID: branchId ? parseInt(branchId, 10) : null,
           
           PAYMENT_METHOD: data.PAYMENT_METHOD,
           CASH_AMOUNT: data.CASH_AMOUNT,

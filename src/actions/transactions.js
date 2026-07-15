@@ -4,11 +4,15 @@ import prisma from '@/lib/prisma';
 import { logAction } from '@/lib/logger';
 import { formatTransId } from '@/utils/formatters';
 
-export async function getTransactions(employeeId, role) {
+export async function getTransactions(employeeId, role, branchId) {
   try {
-    const where = (role === 'staff' && employeeId) 
-      ? { EMPLOYEE_ID: parseInt(employeeId, 10) }
-      : {};
+    const where = {};
+    if (role === 'staff' && employeeId) {
+      where.EMPLOYEE_ID = parseInt(employeeId, 10);
+    }
+    if (branchId) {
+      where.BRANCH_ID = parseInt(branchId, 10);
+    }
 
     const data = await prisma.transaction.findMany({
       where,

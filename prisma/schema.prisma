@@ -21,6 +21,17 @@ model location {
   suppliers   supplier[]
 }
 
+model branch {
+  BRANCH_ID    Int           @id @default(autoincrement())
+  NAME         String?       @db.VarChar(100)
+  users        users[]
+  employees    employee[]
+  transactions transaction[]
+  invoices     invoice[]
+  products     product[]
+  system_logs  system_logs[]
+}
+
 model job {
   JOB_ID    Int        @id @default(autoincrement())
   JOB_TITLE String?    @db.VarChar(50)
@@ -37,8 +48,10 @@ model employee {
   PIN          String?   @db.VarChar(10)
   JOB_ID       Int?
   LOCATION_ID  Int?
+  BRANCH_ID    Int?
   job          job?      @relation(fields: [JOB_ID], references: [JOB_ID])
   location     location? @relation(fields: [LOCATION_ID], references: [LOCATION_ID])
+  branch       branch?   @relation(fields: [BRANCH_ID], references: [BRANCH_ID])
   users        users[]
   services     service[]
 }
@@ -55,8 +68,10 @@ model users {
   USERNAME    String?   @db.VarChar(50)
   PASSWORD    String?   @db.VarChar(50)
   TYPE_ID     Int?
+  BRANCH_ID   Int?
   employee    employee? @relation(fields: [EMPLOYEE_ID], references: [EMPLOYEE_ID])
   type        type?     @relation(fields: [TYPE_ID], references: [TYPE_ID])
+  branch      branch?   @relation(fields: [BRANCH_ID], references: [BRANCH_ID])
 }
 
 model supplier {
@@ -90,8 +105,10 @@ model product {
   MODEL             String?   @db.VarChar(100)
   WEIGHT            String?   @db.VarChar(50)
   ENQUIRY_COUNT     Int?      @default(0)
+  BRANCH_ID         Int?
   category          category? @relation(fields: [CATEGORY_ID], references: [CATEGORY_ID])
   supplier          supplier? @relation(fields: [SUPPLIER_ID], references: [SUPPLIER_ID])
+  branch            branch?   @relation(fields: [BRANCH_ID], references: [BRANCH_ID])
   transaction_details transaction_details[]
   service_details   service_details[]
   invoice_details   invoice_details[]
@@ -115,6 +132,7 @@ model transaction_details {
   QTY         Int?
   UNIT_PRICE  Decimal?    @db.Decimal
   PRICE       Decimal?    @db.Decimal
+  SERIAL_NUMBER String?   @db.VarChar(100)
   transaction transaction? @relation(fields: [TRANS_ID], references: [TRANS_ID])
   product     product?     @relation(fields: [PRODUCT_ID], references: [PRODUCT_ID])
 }
@@ -148,8 +166,11 @@ model transaction {
   status             String?   @default("Active") @db.VarChar(50)
   reversal_reason    String?   @db.Text
   EMPLOYEE_ID        Int?
+  BRANCH_ID          Int?
+  MPESA_RECEIPT      String?   @db.VarChar(50)
   customer           customer? @relation("CustomerTransaction", fields: [CUST_ID], references: [CUST_ID])
   credit_customer    customer? @relation("CreditCustomerTransaction", fields: [CREDIT_CUSTOMER_ID], references: [CUST_ID])
+  branch             branch?   @relation(fields: [BRANCH_ID], references: [BRANCH_ID])
   transaction_details transaction_details[]
 }
 
@@ -159,7 +180,10 @@ model invoice {
   STATUS          String?           @default("Unpaid") @db.VarChar(50)
   TOTAL_AMOUNT    Decimal?          @db.Decimal
   DATE_ISSUED     DateTime          @default(now())
+  BRANCH_ID       Int?
+  MPESA_RECEIPT   String?           @db.VarChar(50)
   customer        customer?         @relation(fields: [CUST_ID], references: [CUST_ID])
+  branch          branch?           @relation(fields: [BRANCH_ID], references: [BRANCH_ID])
   invoice_details invoice_details[]
 }
 
@@ -169,6 +193,7 @@ model invoice_details {
   PRODUCT_ID  Int?
   QTY         Int?
   PRICE       Decimal? @db.Decimal
+  SERIAL_NUMBER String? @db.VarChar(100)
   invoice     invoice? @relation(fields: [INVOICE_ID], references: [INVOICE_ID])
   product     product? @relation(fields: [PRODUCT_ID], references: [PRODUCT_ID])
 }
@@ -201,4 +226,6 @@ model system_logs {
   ACTION      String?  @db.VarChar(250)
   TIMESTAMP   DateTime @default(now())
   IP_ADDRESS  String?  @db.VarChar(50)
+  BRANCH_ID   Int?
+  branch      branch?  @relation(fields: [BRANCH_ID], references: [BRANCH_ID])
 }

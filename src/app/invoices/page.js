@@ -7,9 +7,11 @@ import InvoicePrint from '@/components/InvoicePrint';
 import ThermalInvoice from '@/components/ThermalInvoice';
 import { logAction } from '@/lib/logger';
 import { createPortal } from 'react-dom';
+import { useBranch } from '@/context/BranchContext';
 
 export default function InvoicesPage() {
   const { role, employeeId } = useAuth();
+  const { currentBranchId } = useBranch();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,7 +47,7 @@ export default function InvoicesPage() {
   useEffect(() => {
     fetchInvoices();
     fetchProducts();
-  }, [role, employeeId]);
+  }, [role, employeeId, currentBranchId]);
 
   useEffect(() => {
     if (printInvoice) {
@@ -60,7 +62,7 @@ export default function InvoicesPage() {
     setLoading(true);
     try {
       const { getInvoices } = await import('@/actions/invoices');
-      const data = await getInvoices(role, employeeId);
+      const data = await getInvoices(role, employeeId, currentBranchId);
       if (data) setInvoices(data);
     } catch (error) {
       console.error('Error fetching invoices:', error);
@@ -71,7 +73,7 @@ export default function InvoicesPage() {
   const fetchProducts = async () => {
     try {
       const { getActiveProducts } = await import('@/actions/invoices');
-      const data = await getActiveProducts();
+      const data = await getActiveProducts(currentBranchId);
       if (data) setProducts(data);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -129,7 +131,7 @@ export default function InvoicesPage() {
         SUBTOTAL: subtotal,
         TAX_AMOUNT: tax,
         GRAND_TOTAL: grandTotal
-      }, invoiceItems, employeeId);
+      }, invoiceItems, employeeId, currentBranchId);
 
       setShowCreateModal(false);
       setNewInvoice({ CUSTOMER_NAME: '', CUSTOMER_PHONE: '', CUSTOMER_ADDRESS: '', CUSTOMER_EMAIL: '', NOTES: '' });
@@ -173,7 +175,7 @@ export default function InvoicesPage() {
 
     try {
       const { settleInvoicePayment } = await import('@/actions/invoices');
-      await settleInvoicePayment(settleInvoice.INVOICE_ID, paymentMethod, cashAmt, mpesaAmt, employeeId);
+      await settleInvoicePayment(settleInvoice.INVOICE_ID, paymentMethod, cashAmt, mpesaAmt, employeeId, currentBranchId);
       
       fetchInvoices();
       alert("Invoice paid and stock deducted successfully.");

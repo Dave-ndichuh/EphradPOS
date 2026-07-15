@@ -5,11 +5,13 @@ import { Plus, Edit, Trash2, Search, X, Image as ImageIcon } from 'lucide-react'
 import { UploadButton } from '@/utils/uploadthing';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useProducts } from '@/hooks/useProducts';
+import { useBranch } from '@/context/BranchContext';
 
 function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const filterParam = searchParams.get('filter');
+  const { currentBranchId } = useBranch();
 
   const {
     products,
@@ -19,7 +21,7 @@ function ProductsContent() {
     error,
     saveProduct: saveProductHook,
     deleteProduct: deleteProductHook
-  } = useProducts();
+  } = useProducts(currentBranchId);
 
   const [searchTerm, setSearchTerm] = useState('');
   

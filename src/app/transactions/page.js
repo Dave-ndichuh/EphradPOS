@@ -5,6 +5,7 @@ import { Search, Printer, Calendar, X, Eye, CheckCircle } from 'lucide-react';
 import Receipt from '@/components/Receipt';
 import { formatTransId, formatItemName } from '@/utils/formatters';
 import { useAuth } from '@/components/AuthGuard';
+import { useBranch } from '@/context/BranchContext';
 import { useSearchParams } from 'next/navigation';
 import { createPortal } from 'react-dom';
 
@@ -41,6 +42,7 @@ function TransactionsContent() {
   const itemsPerPage = 15;
   
   const { role, employeeId } = useAuth();
+  const { currentBranchId } = useBranch();
 
   // Auto-trigger print when printData is fully rendered
   useEffect(() => {
@@ -56,7 +58,7 @@ function TransactionsContent() {
     const fetchTransactions = async () => {
       try {
         const { getTransactions } = await import('@/actions/transactions');
-        const data = await getTransactions(employeeId, role);
+        const data = await getTransactions(employeeId, role, currentBranchId);
         if (data) {
           setTransactions(data);
         }
@@ -66,7 +68,7 @@ function TransactionsContent() {
       setLoading(false);
     };
     fetchTransactions();
-  }, [role, employeeId]);
+  }, [role, employeeId, currentBranchId]);
 
   const filteredTransactions = transactions.filter(t => {
     let matchesId = true;

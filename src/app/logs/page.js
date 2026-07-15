@@ -4,9 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/components/AuthGuard';
 import { ShieldAlert, Info, AlertTriangle, Search, Clock, User, FileText, Trash2, X, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useBranch } from '@/context/BranchContext';
 
 export default function LogsPage() {
   const { role, user } = useAuth();
+  const { currentBranchId } = useBranch();
   const router = useRouter();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function LogsPage() {
     setLoading(true);
     try {
       const { getLogs } = await import('@/actions/logs');
-      const data = await getLogs();
+      const data = await getLogs(currentBranchId);
       if (data) {
         setLogs(data);
       }
@@ -29,7 +31,7 @@ export default function LogsPage() {
       console.error('Error fetching logs:', error);
     }
     setLoading(false);
-  }, []);
+  }, [currentBranchId]);
 
   useEffect(() => {
     if (role === 'employee') {
@@ -48,7 +50,7 @@ export default function LogsPage() {
     
     try {
       const { clearLogs } = await import('@/actions/logs');
-      const result = await clearLogs(user.email, adminPassword);
+      const result = await clearLogs(user.email, adminPassword, currentBranchId);
       
       if (!result.success) {
         alert(result.error + '. Logs were not cleared.');

@@ -2,13 +2,14 @@
 
 import prisma from '@/lib/prisma';
 
-export async function getDashboardMetrics() {
+export async function getDashboardMetrics(branchId) {
   try {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     
     // 1. Fetch Products for stock metrics
     const products = await prisma.product.findMany({
+      where: branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {},
       select: { PRODUCT_ID: true, NAME: true, ON_HAND: true, COST_PRICE: true }
     });
     
@@ -27,6 +28,7 @@ export async function getDashboardMetrics() {
         CREATED_AT: {
           gte: firstDayOfMonth
         },
+        ...(branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {}),
         OR: [
           { IS_CREDIT: false },
           { IS_SETTLED: true }

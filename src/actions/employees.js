@@ -2,9 +2,10 @@
 
 import prisma from '@/lib/prisma';
 
-export async function getEmployees() {
+export async function getEmployees(branchId) {
   try {
     const employees = await prisma.employee.findMany({
+      where: branchId ? { BRANCH_ID: parseInt(branchId, 10) } : {},
       include: {
         job: { select: { JOB_TITLE: true } },
         location: { select: { CITY: true, PROVINCE: true } }
@@ -52,7 +53,7 @@ export async function resolveLocationId(city) {
   return location.LOCATION_ID;
 }
 
-export async function saveEmployee(id, formData) {
+export async function saveEmployee(id, formData, branchId) {
   try {
     const jobId = await resolveJobId(formData.JOB_TITLE);
     const locId = await resolveLocationId(formData.LOCATION_CITY);
@@ -67,6 +68,10 @@ export async function saveEmployee(id, formData) {
       LOCATION_ID: locId,
       PIN: formData.PIN
     };
+
+    if (branchId) {
+      payload.BRANCH_ID = parseInt(branchId, 10);
+    }
 
     if (id) {
       // Update

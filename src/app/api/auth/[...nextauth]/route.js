@@ -29,6 +29,7 @@ const handler = NextAuth({
             name: (employee.FIRST_NAME || '') + ' ' + (employee.LAST_NAME || ''),
             email: employee.EMAIL || `emp_${employee.EMPLOYEE_ID}@ephrad.com`,
             role: 'staff',
+            branchId: employee.BRANCH_ID, // Include assigned branch
           };
         }
 
@@ -68,6 +69,7 @@ const handler = NextAuth({
             name: (employee.FIRST_NAME || '') + ' ' + (employee.LAST_NAME || ''),
             email: employee.EMAIL,
             role: isAdmin ? 'admin' : 'staff',
+            branchId: employee.BRANCH_ID,
           };
         }
 
@@ -98,6 +100,7 @@ const handler = NextAuth({
       if (user) {
         token.role = user.role;
         token.id = user.id;
+        token.branchId = user.branchId;
       }
       return token;
     },
@@ -105,6 +108,7 @@ const handler = NextAuth({
       if (token) {
         session.user.role = token.role;
         session.user.id = token.id;
+        session.user.branchId = token.branchId;
       }
       return session;
     },

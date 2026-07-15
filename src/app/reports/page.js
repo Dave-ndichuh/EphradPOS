@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { BarChart3, TrendingUp, AlertCircle, PackageSearch, Download, DollarSign, Calendar, RefreshCcw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import { formatItemName } from '@/utils/formatters';
+import { useBranch } from '@/context/BranchContext';
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
+  const { currentBranchId } = useBranch();
   
   // Custom Date Range
   const [periodPreset, setPeriodPreset] = useState('This Month'); // Today, Last 7 Days, This Month, Last Month, Custom
@@ -60,7 +62,7 @@ export default function ReportsPage() {
 
     // Fetch Data
     const { getReportData } = await import('@/actions/reports');
-    const result = await getReportData(startDateTime, endDateTime);
+    const result = await getReportData(startDateTime, endDateTime, currentBranchId);
 
     if (!result.success) {
       console.error(result.error);
@@ -178,7 +180,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, currentBranchId]);
 
   const exportCSV = () => {
     let csvContent = "data:text/csv;charset=utf-8,";

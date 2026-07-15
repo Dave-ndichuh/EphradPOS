@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Edit, Trash2, Search, X } from 'lucide-react';
+import { useBranch } from '@/context/BranchContext';
 
 export default function EmployeesPage() {
+  const { currentBranchId } = useBranch();
   const [employees, setEmployees] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -19,9 +21,10 @@ export default function EmployeesPage() {
   });
 
   const fetchEmployees = async () => {
+    setLoading(true);
     try {
       const { getEmployees } = await import('@/actions/employees');
-      const data = await getEmployees();
+      const data = await getEmployees(currentBranchId);
       setEmployees(data.employees);
       setJobs(data.jobs);
       setLocations(data.locations);
@@ -33,7 +36,7 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
+  }, [currentBranchId]);
 
   const openModal = (employee = null) => {
     if (employee) {
@@ -62,7 +65,7 @@ export default function EmployeesPage() {
 
     try {
       const { saveEmployee: saveEmployeeAction } = await import('@/actions/employees');
-      const result = await saveEmployeeAction(editingId, formData);
+      const result = await saveEmployeeAction(editingId, formData, currentBranchId);
       
       if (!result.success) {
         setErrorMsg(result.error);
