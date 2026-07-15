@@ -36,7 +36,6 @@ function TransactionsContent() {
   const [transactionToSettle, setTransactionToSettle] = useState(null);
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [cashAmount, setCashAmount] = useState('');
-  const [cashAmount, setCashAmount] = useState('');
   const [mpesaAmount, setMpesaAmount] = useState('');
   const [mpesaReceipt, setMpesaReceipt] = useState('');
   
