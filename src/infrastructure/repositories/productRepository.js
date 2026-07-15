@@ -1,6 +1,24 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { UTApi } from 'uploadthing/server';
+
+const utapi = new UTApi();
+
+// Helper to delete an image via UploadThing
+async function deleteUploadThingImage(imageUrl) {
+  if (!imageUrl) return;
+  try {
+    const parts = imageUrl.split('/f/');
+    if (parts.length > 1) {
+      const fileKey = parts[1];
+      await utapi.deleteFiles(fileKey);
+      console.log(`Deleted image from UploadThing: ${fileKey}`);
+    }
+  } catch (err) {
+    console.error('Failed to delete image from UploadThing:', err);
+  }
+}
 
 export async function getAllProducts(branchId) {
   try {
@@ -85,6 +103,17 @@ export async function createProduct(payload, branchId) {
 
 export async function updateProduct(id, payload) {
   try {
+    // Check if the image changed, to delete the old one
+    if (payload.IMAGE_URL !== undefined) {
+      const oldProduct = await prisma.product.findUnique({
+        where: { PRODUCT_ID: id },
+        select: { IMAGE_URL: true }
+      });
+      if (oldProduct?.IMAGE_URL && oldProduct.IMAGE_URL !== payload.IMAGE_URL) {
+        await deleteUploadThingImage(oldProduct.IMAGE_URL);
+      }
+    }
+
     const data = await prisma.product.update({
       where: { PRODUCT_ID: id },
       data: payload
@@ -98,9 +127,19 @@ export async function updateProduct(id, payload) {
 
 export async function deleteProduct(id) {
   try {
+    const oldProduct = await prisma.product.findUnique({
+      where: { PRODUCT_ID: id },
+      select: { IMAGE_URL: true }
+    });
+
     await prisma.product.delete({
       where: { PRODUCT_ID: id }
     });
+    
+    if (oldProduct?.IMAGE_URL) {
+      await deleteUploadThingImage(oldProduct.IMAGE_URL);
+    }
+    
     return { success: true };
   } catch (error) {
     // If there is a foreign key constraint violation (code P2003 in Prisma)

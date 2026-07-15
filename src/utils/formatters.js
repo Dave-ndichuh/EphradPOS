@@ -1,5 +1,5 @@
-export const formatTransId = (transId) => {
-  if (!transId) return '';
+export const formatTransId = (transId, serialNumber = null) => {
+  if (!transId) return serialNumber ? String(serialNumber).toUpperCase() : '';
   const idStr = String(transId);
   return idStr.includes('-') ? idStr.split('-')[0].toUpperCase() : idStr.toUpperCase();
 };

@@ -63,7 +63,7 @@ export async function getTransactions(employeeId, role, branchId) {
   }
 }
 
-export async function settleTransaction(transId, paymentMode, cashAmount, mpesaAmount, totalDue) {
+export async function settleTransaction(transId, paymentMode, cashAmount, mpesaAmount, totalDue, mpesaReceipt) {
   try {
     let finalCash = 0;
     let finalMpesa = 0;
@@ -83,6 +83,7 @@ export async function settleTransaction(transId, paymentMode, cashAmount, mpesaA
         PAYMENT_METHOD: paymentMode,
         CASH_AMOUNT: finalCash,
         MPESA_AMOUNT: finalMpesa,
+        MPESA_RECEIPT: (paymentMode === 'M-Pesa' || paymentMode === 'Hybrid') ? mpesaReceipt : null,
         HYBRID_PAYMENT: isHybrid,
         IS_SETTLED: true,
         CASH_TENDERED: totalDue

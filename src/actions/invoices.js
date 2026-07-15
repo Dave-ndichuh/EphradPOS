@@ -110,7 +110,7 @@ export async function createInvoice(invoiceData, items, employeeId, branchId) {
   }
 }
 
-export async function settleInvoicePayment(invoiceId, paymentMethod, cashAmt, mpesaAmt, employeeId, branchId) {
+export async function settleInvoicePayment(invoiceId, paymentMethod, cashAmt, mpesaAmt, employeeId, branchId, mpesaReceipt) {
   try {
     return await prisma.$transaction(async (tx) => {
       // 1. Fetch full invoice details
@@ -147,6 +147,7 @@ export async function settleInvoicePayment(invoiceId, paymentMethod, cashAmt, mp
           PAYMENT_METHOD: paymentMethod,
           CASH_AMOUNT: cashAmt,
           MPESA_AMOUNT: mpesaAmt,
+          MPESA_RECEIPT: (paymentMethod === 'M-Pesa' || paymentMethod === 'Hybrid') ? mpesaReceipt : null,
           HYBRID_PAYMENT: isHybrid,
           IS_CREDIT: false,
           IS_SETTLED: true,

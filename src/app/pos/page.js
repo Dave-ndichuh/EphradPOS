@@ -359,6 +359,10 @@ export default function POSPage() {
     setCart(prev => prev.map(item => item.PRODUCT_ID === id ? { ...item, adjustmentInput: val } : item));
   };
 
+  const updateItemSerial = (id, val) => {
+    setCart(prev => prev.map(item => item.PRODUCT_ID === id ? { ...item, SERIAL_NUMBER: val } : item));
+  };
+
   const applyAdjustment = (id, isAdd) => {
     setCart(prev => prev.map(item => {
       if (item.PRODUCT_ID === id) {
@@ -414,6 +418,14 @@ export default function POSPage() {
     if (paymentMethod === 'Hybrid' && !isHybridValid()) {
       alert(`Hybrid payments must equal exactly Ksh. ${grandTotal.toLocaleString()}`);
       return;
+    }
+
+    if (paymentMethod === 'M-Pesa' || paymentMethod === 'Hybrid') {
+      const mpesaRegex = /^[A-Z0-9]{10}$/;
+      if (!mpesaReceipt || !mpesaRegex.test(mpesaReceipt)) {
+        alert('Please enter a valid 10-digit alphanumeric M-Pesa receipt code.');
+        return;
+      }
     }
 
     if (paymentMethod === 'Credit' || paymentMethod === 'Invoice') {
@@ -473,6 +485,7 @@ export default function POSPage() {
         PAYMENT_METHOD: paymentMethod,
         CASH_AMOUNT: cashAmt,
         MPESA_AMOUNT: mpesaAmt,
+        MPESA_RECEIPT: (paymentMethod === 'M-Pesa' || paymentMethod === 'Hybrid') ? mpesaReceipt : null,
         HYBRID_PAYMENT: paymentMethod === 'Hybrid',
         IS_CREDIT: isCredit,
         CREDIT_CUSTOMER_ID: isCredit ? parseInt(creditCustomerId) : null,
@@ -786,8 +799,17 @@ export default function POSPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {cart.map(item => (
                 <div key={item.PRODUCT_ID} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius)', border: '1px solid #e2e8f0', gap: '0.5rem' }}>
-                  <div className="marquee-container" style={{ flex: 1, minWidth: '80px', fontWeight: 600, fontSize: '0.875rem' }} title={item.NAME}>
-                    <div className={item.NAME.length > 20 ? "marquee-content" : ""} style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>{item.NAME}</div>
+                  <div style={{ flex: 1, minWidth: '80px', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <div className="marquee-container" style={{ fontWeight: 600, fontSize: '0.875rem' }} title={item.NAME}>
+                      <div className={item.NAME.length > 20 ? "marquee-content" : ""} style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>{item.NAME}</div>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Serial Number (Optional)" 
+                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none' }} 
+                      value={item.SERIAL_NUMBER || ''} 
+                      onChange={(e) => updateItemSerial(item.PRODUCT_ID, e.target.value)}
+                    />
                   </div>
                   
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -860,18 +882,22 @@ export default function POSPage() {
 
           {/* Conditional Inputs based on Method */}
           {paymentMethod === 'M-Pesa' && (
-            <input type="text" className="input" placeholder="M-Pesa Transaction Code" style={{ marginBottom: '1.25rem', border: '2px solid #25D366', padding: '0.75rem' }} value={mpesaReceipt} onChange={(e) => setMpesaReceipt(e.target.value)} />
+            <input type="text" className="input" placeholder="M-Pesa Transaction Code (10 digits)" style={{ marginBottom: '1.25rem', border: '2px solid #25D366', padding: '0.75rem', textTransform: 'uppercase' }} value={mpesaReceipt} onChange={(e) => setMpesaReceipt(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} maxLength={10} />
           )}
 
           {paymentMethod === 'Hybrid' && (
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem' }}>
-              <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div style={{ flex: 1, minWidth: '120px' }}>
                 <label style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', display: 'block', marginBottom: '0.25rem' }}>Cash Amount</label>
                 <input type="number" className="input" placeholder="0" style={{ padding: '0.75rem' }} value={hybridCash} onChange={e => setHybridCash(e.target.value)} />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: '120px' }}>
                 <label style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', display: 'block', marginBottom: '0.25rem' }}>M-Pesa Amount</label>
                 <input type="number" className="input" placeholder="0" style={{ border: '2px solid #25D366', padding: '0.75rem' }} value={hybridMpesa} onChange={e => setHybridMpesa(e.target.value)} />
+              </div>
+              <div style={{ flex: '1 1 100%' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', display: 'block', marginBottom: '0.25rem' }}>M-Pesa Receipt Code</label>
+                <input type="text" className="input" placeholder="e.g. QWE123RTY9" style={{ border: '2px solid #25D366', padding: '0.75rem', textTransform: 'uppercase' }} value={mpesaReceipt} onChange={(e) => setMpesaReceipt(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} maxLength={10} />
               </div>
             </div>
           )}

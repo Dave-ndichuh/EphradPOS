@@ -173,9 +173,18 @@ export default function InvoicesPage() {
       mpesaAmt = settleInvoice.GRAND_TOTAL;
     }
 
+    if (paymentMethod === 'M-Pesa' || paymentMethod === 'Hybrid') {
+      const mpesaRegex = /^[A-Z0-9]{10}$/;
+      if (!mpesaReceipt || !mpesaRegex.test(mpesaReceipt)) {
+        alert('Please enter a valid 10-digit alphanumeric M-Pesa receipt code.');
+        setSettling(false);
+        return;
+      }
+    }
+
     try {
       const { settleInvoicePayment } = await import('@/actions/invoices');
-      await settleInvoicePayment(settleInvoice.INVOICE_ID, paymentMethod, cashAmt, mpesaAmt, employeeId, currentBranchId);
+      await settleInvoicePayment(settleInvoice.INVOICE_ID, paymentMethod, cashAmt, mpesaAmt, employeeId, currentBranchId, mpesaReceipt);
       
       fetchInvoices();
       alert("Invoice paid and stock deducted successfully.");
@@ -485,8 +494,8 @@ export default function InvoicesPage() {
 
             {(paymentMethod === 'M-Pesa' || paymentMethod === 'Hybrid') && (
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--muted-foreground)' }}>M-Pesa Receipt (Optional)</label>
-                <input type="text" className="input" placeholder="e.g. QWE123RTY" value={mpesaReceipt} onChange={e => setMpesaReceipt(e.target.value.toUpperCase())} />
+                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: 'var(--muted-foreground)' }}>M-Pesa Receipt Code</label>
+                <input type="text" className="input" placeholder="e.g. QWE123RTY9 (10 digits)" value={mpesaReceipt} onChange={e => setMpesaReceipt(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} maxLength={10} required />
               </div>
             )}
 

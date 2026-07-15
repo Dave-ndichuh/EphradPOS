@@ -18,6 +18,7 @@ function TransactionsContent() {
   const [searchId, setSearchId] = useState(searchParams.get('searchId') || '');
   const [searchDate, setSearchDate] = useState('');
   const [filterStatus, setFilterStatus] = useState('Active'); // Active, Reversed, All
+  const [sortConfig, setSortConfig] = useState({ key: 'CREATED_AT', direction: 'desc' });
   
   // Print State
   const [printData, setPrintData] = useState(null);
@@ -35,7 +36,9 @@ function TransactionsContent() {
   const [transactionToSettle, setTransactionToSettle] = useState(null);
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [cashAmount, setCashAmount] = useState('');
+  const [cashAmount, setCashAmount] = useState('');
   const [mpesaAmount, setMpesaAmount] = useState('');
+  const [mpesaReceipt, setMpesaReceipt] = useState('');
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -96,13 +99,40 @@ function TransactionsContent() {
     return matchesId && matchesDate && matchesStatus;
   });
 
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+    if (sortConfig.key === 'CREATED_AT') {
+      return sortConfig.direction === 'asc' 
+        ? new Date(a.CREATED_AT) - new Date(b.CREATED_AT)
+        : new Date(b.CREATED_AT) - new Date(a.CREATED_AT);
+    }
+    if (sortConfig.key === 'GRAND_TOTAL') {
+      const aTotal = a.ADJUSTED_TOTAL || a.GRAND_TOTAL;
+      const bTotal = b.ADJUSTED_TOTAL || b.GRAND_TOTAL;
+      return sortConfig.direction === 'asc' ? aTotal - bTotal : bTotal - aTotal;
+    }
+    if (sortConfig.key === 'STATUS') {
+      return sortConfig.direction === 'asc' 
+        ? a.status.localeCompare(b.status)
+        : b.status.localeCompare(a.status);
+    }
+    return 0;
+  });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
   // Pagination Logic
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchId, searchDate]);
+  }, [searchId, searchDate, filterStatus]);
 
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-  const currentItems = filteredTransactions.slice(
+  const totalPages = Math.max(1, Math.ceil(sortedTransactions.length / itemsPerPage));
+  const currentItems = sortedTransactions.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -132,6 +162,7 @@ function TransactionsContent() {
     setPaymentMode('Cash');
     setCashAmount(trans.ADJUSTED_TOTAL || trans.GRAND_TOTAL);
     setMpesaAmount(0);
+    setMpesaReceipt('');
     setSettleModalOpen(true);
   };
 
@@ -157,16 +188,24 @@ function TransactionsContent() {
       }
     }
 
+    if (paymentMode === 'M-Pesa' || paymentMode === 'Hybrid') {
+      const mpesaRegex = /^[A-Z0-9]{10}$/;
+      if (!mpesaReceipt || !mpesaRegex.test(mpesaReceipt)) {
+        alert('Please enter a valid 10-digit alphanumeric M-Pesa receipt code.');
+        return;
+      }
+    }
+
     try {
       const { settleTransaction } = await import('@/actions/transactions');
-      await settleTransaction(transactionToSettle.TRANS_ID, paymentMode, finalCash, finalMpesa, totalDue);
+      await settleTransaction(transactionToSettle.TRANS_ID, paymentMode, finalCash, finalMpesa, totalDue, mpesaReceipt);
       
       setSettleModalOpen(false);
       setTransactionToSettle(null);
       // Quickly update local state to avoid full refetch
       setTransactions(prev => prev.map(t => {
         if (t.TRANS_ID === transactionToSettle.TRANS_ID) {
-          return { ...t, PAYMENT_METHOD: paymentMode, CASH_AMOUNT: finalCash, MPESA_AMOUNT: finalMpesa, HYBRID_PAYMENT: isHybrid, IS_SETTLED: true, CASH_TENDERED: totalDue };
+          return { ...t, PAYMENT_METHOD: paymentMode, CASH_AMOUNT: finalCash, MPESA_AMOUNT: finalMpesa, MPESA_RECEIPT: (paymentMode === 'M-Pesa' || paymentMode === 'Hybrid') ? mpesaReceipt : null, HYBRID_PAYMENT: isHybrid, IS_SETTLED: true, CASH_TENDERED: totalDue };
         }
         return t;
       }));
@@ -262,11 +301,17 @@ function TransactionsContent() {
           <thead>
             <tr>
               <th>Transaction ID</th>
-              <th>Date & Time</th>
+              <th onClick={() => handleSort('CREATED_AT')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                Date & Time {sortConfig.key === 'CREATED_AT' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
               <th>Customer</th>
               <th>Items</th>
-              <th>Payment Info</th>
-              <th>Total (Ksh)</th>
+              <th onClick={() => handleSort('STATUS')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                Payment Info {sortConfig.key === 'STATUS' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th onClick={() => handleSort('GRAND_TOTAL')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                Total (Ksh) {sortConfig.key === 'GRAND_TOTAL' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
               <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
@@ -447,15 +492,28 @@ function TransactionsContent() {
                 </div>
               </div>
 
+              {paymentMode === 'M-Pesa' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem', color: 'var(--muted-foreground)' }}>M-Pesa Receipt Code</label>
+                  <input type="text" className="input" placeholder="e.g. QWE123RTY9 (10 digits)" style={{ border: '2px solid #25D366', padding: '0.75rem', textTransform: 'uppercase' }} value={mpesaReceipt} onChange={(e) => setMpesaReceipt(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} maxLength={10} required />
+                </div>
+              )}
+
               {paymentMode === 'Hybrid' && (
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem', color: 'var(--muted-foreground)' }}>Cash Amount</label>
-                    <input type="number" className="input" min="0" value={cashAmount} onChange={e => setCashAmount(e.target.value)} required />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem', color: 'var(--muted-foreground)' }}>Cash Amount</label>
+                      <input type="number" className="input" min="0" value={cashAmount} onChange={e => setCashAmount(e.target.value)} required />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem', color: 'var(--muted-foreground)' }}>M-Pesa Amount</label>
+                      <input type="number" className="input" min="0" value={mpesaAmount} onChange={e => setMpesaAmount(e.target.value)} required />
+                    </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem', color: 'var(--muted-foreground)' }}>M-Pesa Amount</label>
-                    <input type="number" className="input" min="0" value={mpesaAmount} onChange={e => setMpesaAmount(e.target.value)} required />
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem', color: 'var(--muted-foreground)' }}>M-Pesa Receipt Code</label>
+                    <input type="text" className="input" placeholder="e.g. QWE123RTY9 (10 digits)" style={{ border: '2px solid #25D366', padding: '0.75rem', textTransform: 'uppercase' }} value={mpesaReceipt} onChange={(e) => setMpesaReceipt(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} maxLength={10} required />
                   </div>
                 </div>
               )}

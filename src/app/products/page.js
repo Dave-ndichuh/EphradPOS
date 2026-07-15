@@ -24,6 +24,8 @@ function ProductsContent() {
   } = useProducts(currentBranchId);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -91,18 +93,29 @@ function ProductsContent() {
   };
 
   const filteredProducts = products.filter(p => {
-    const term = searchTerm.toLowerCase();
-    const matchesSearch = 
-      p.name?.toLowerCase().includes(term) || 
-      p.productCode?.toLowerCase().includes(term) ||
-      p.brand?.toLowerCase().includes(term) ||
-      p.model?.toLowerCase().includes(term) ||
-      p.barcode?.toLowerCase().includes(term);
+    if (!searchTerm.trim()) {
+      if (filterParam === 'low-stock') return p.onHand <= p.reorderThreshold;
+      return true;
+    }
+    const terms = searchTerm.toLowerCase().split(' ').filter(t => t.trim() !== '');
+    const searchableString = `${p.name || ''} ${p.productCode || ''} ${p.brand || ''} ${p.model || ''} ${p.barcode || ''}`.toLowerCase();
+    
+    const matchesSearch = terms.every(term => searchableString.includes(term));
+    
     if (filterParam === 'low-stock') {
       return matchesSearch && p.onHand <= p.reorderThreshold;
     }
     return matchesSearch;
   });
+
+  // Pagination logic
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Reset to page 1 on search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterParam]);
 
   return (
     <>
@@ -156,7 +169,7 @@ function ProductsContent() {
                 <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>No products found.</td>
               </tr>
             ) : (
-              filteredProducts.map((product) => (
+              paginatedProducts.map((product) => (
                 <tr key={product.id}>
                   <td><span className="badge badge-warning">{product.productCode}</span></td>
                   <td style={{ fontWeight: 500 }}>
@@ -211,6 +224,33 @@ function ProductsContent() {
             )}
           </tbody>
         </table>
+
+        {!loading && filteredProducts.length > 0 && (
+          <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
+            <div style={{ color: 'var(--muted-foreground)', fontSize: '0.875rem' }}>
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredProducts.length)} of {filteredProducts.length} entries
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className="btn btn-secondary" 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              >
+                Previous
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '0 0.5rem', fontWeight: 500 }}>
+                Page {currentPage} of {totalPages}
+              </div>
+              <button 
+                className="btn btn-secondary" 
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       </div>
 

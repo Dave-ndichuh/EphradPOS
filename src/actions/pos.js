@@ -129,7 +129,8 @@ export async function createTransaction(data, cart, employeeId, branchId) {
           PRODUCT_ID: item.PRODUCT_ID,
           QTY: item.quantity,
           UNIT_PRICE: effectivePrice,
-          PRICE: effectivePrice
+          PRICE: effectivePrice,
+          SERIAL_NUMBER: item.SERIAL_NUMBER || null
         };
       });
 
@@ -143,9 +144,19 @@ export async function createTransaction(data, cart, employeeId, branchId) {
         });
       }
 
+      let logDetails = `Transaction #${transaction.TRANS_ID} completed via ${data.PAYMENT_METHOD} for Ksh. ${data.GRAND_TOTAL}`;
+      
+      if (data.IS_CREDIT) {
+        logDetails = `Credit Sale #${transaction.TRANS_ID} for Ksh. ${data.GRAND_TOTAL}`;
+        const serials = cart.map(item => item.SERIAL_NUMBER).filter(Boolean);
+        if (serials.length > 0) {
+          logDetails += `. Electronic Serials: ${serials.join(', ')}`;
+        }
+      }
+
       await logAction({
-        action: 'Completed Sale',
-        details: `Transaction #${transaction.TRANS_ID} completed via ${data.PAYMENT_METHOD} for Ksh. ${data.GRAND_TOTAL}`,
+        action: data.IS_CREDIT ? 'Credit Sale' : 'Completed Sale',
+        details: logDetails,
         severity: 'info'
       });
 
