@@ -1,0 +1,21 @@
+{
+  "projectId": "23583b90-11e5-4a28-aa1e-b4dde35c0e93",
+  "type": "frontend",
+  "name": "Admin Login and Dashboard Overview",
+  "description": "Verifies that an admin can log into the system and successfully view dashboard metrics like total sales and transactions.",
+  "priority": "p1",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to the root URL and complete the admin login using standard test credentials."
+    },
+    {
+      "type": "action",
+      "description": "Navigate to the Dashboard (/dashboard) if not already there."
+    },
+    {
+      "type": "assertion",
+      "description": "Assert that key summary cards such as 'Today's Sales' and 'Total Transactions' are visible on the dashboard."
+    }
+  ]
+}

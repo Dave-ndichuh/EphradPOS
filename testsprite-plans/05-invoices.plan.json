@@ -1,0 +1,29 @@
+{
+  "projectId": "23583b90-11e5-4a28-aa1e-b4dde35c0e93",
+  "type": "frontend",
+  "name": "Invoice Generation and Payment",
+  "description": "Verifies that an admin can create an invoice, add items, and settle it with M-Pesa.",
+  "priority": "p2",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to the Invoices page (/invoices)."
+    },
+    {
+      "type": "action",
+      "description": "Click 'Create Invoice', add a customer and some products, and save the invoice."
+    },
+    {
+      "type": "action",
+      "description": "Click the 'Settle' button on the newly created invoice."
+    },
+    {
+      "type": "action",
+      "description": "Select 'M-Pesa' as the payment method, enter the full amount and a valid 10-digit M-Pesa receipt (e.g., 'ABC1234567'), then confirm."
+    },
+    {
+      "type": "assertion",
+      "description": "Assert that the invoice status changes to 'Paid' or a success message is displayed."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "projectId": "23583b90-11e5-4a28-aa1e-b4dde35c0e93",
+  "type": "frontend",
+  "name": "Product Management",
+  "description": "Verifies that an admin can create a new product.",
+  "priority": "p2",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to the Products page (/products)."
+    },
+    {
+      "type": "action",
+      "description": "Click 'Add Product'."
+    },
+    {
+      "type": "action",
+      "description": "Fill out the product form with a name, price, stock, and select a supplier and category, then save."
+    },
+    {
+      "type": "assertion",
+      "description": "Assert that the new product appears in the product list."
+    }
+  ]
+}

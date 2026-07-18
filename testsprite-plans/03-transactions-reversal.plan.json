@@ -1,0 +1,25 @@
+{
+  "projectId": "23583b90-11e5-4a28-aa1e-b4dde35c0e93",
+  "type": "frontend",
+  "name": "Transactions and Reversal",
+  "description": "Verifies that an admin can view transactions and reverse one.",
+  "priority": "p1",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to the Transactions page (/transactions)."
+    },
+    {
+      "type": "action",
+      "description": "Click the 'Reverse' button on the first active transaction."
+    },
+    {
+      "type": "action",
+      "description": "Enter a valid reversal reason in the modal and confirm."
+    },
+    {
+      "type": "assertion",
+      "description": "Assert that the transaction status changes to 'Reversed'."
+    }
+  ]
+}

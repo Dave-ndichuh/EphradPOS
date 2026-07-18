@@ -1,0 +1,29 @@
+{
+  "projectId": "23583b90-11e5-4a28-aa1e-b4dde35c0e93",
+  "type": "frontend",
+  "name": "POS Cash Checkout Flow",
+  "description": "Verifies that a user can add a product to the cart, select Cash, and complete the sale.",
+  "priority": "p1",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to the POS page (/pos)."
+    },
+    {
+      "type": "action",
+      "description": "Search for a product using the search bar, then click the product to add it to the cart."
+    },
+    {
+      "type": "action",
+      "description": "Click the 'Checkout' button."
+    },
+    {
+      "type": "action",
+      "description": "Ensure 'Cash' is selected as the payment method, enter the exact amount in the 'Amount Tendered' input, and click 'Complete Sale'."
+    },
+    {
+      "type": "assertion",
+      "description": "Assert that a success message is displayed and the receipt print modal appears."
+    }
+  ]
+}

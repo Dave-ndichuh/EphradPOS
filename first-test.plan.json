@@ -1,0 +1,33 @@
+{
+  "projectId": "23583b90-11e5-4a28-aa1e-b4dde35c0e93",
+  "type": "frontend",
+  "name": "POS Credit Checkout Test",
+  "description": "Verifies that the POS page allows adding items, entering a Serial Number, and checking out via Credit.",
+  "priority": "p1",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to /pos. If a login is required, log in with an available test account, then proceed to /pos."
+    },
+    {
+      "type": "action",
+      "description": "Click on the first available product in the product grid to add it to the cart."
+    },
+    {
+      "type": "action",
+      "description": "In the cart section, type 'SN-998877' into the Serial Number input field."
+    },
+    {
+      "type": "action",
+      "description": "Click the 'Checkout' button."
+    },
+    {
+      "type": "action",
+      "description": "In the checkout modal, set the Payment Method to 'Credit', choose a credit customer, and click 'Complete Sale'."
+    },
+    {
+      "type": "assertion",
+      "description": "Assert that a success notification is shown indicating the sale was completed."
+    }
+  ]
+}
