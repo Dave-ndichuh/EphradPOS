@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ProductService } from '@/core/services/ProductService';
+import { getAllProducts, getAllCategories, getAllSuppliers, createProduct, updateProduct, deleteProduct } from '@/infrastructure/repositories/productRepository';
+import { mapToProductEntity, mapFromProductForm } from '@/core/entities/Product';
 import { logAction } from '@/lib/logger';
 
 /**
@@ -18,10 +19,14 @@ export function useProducts(branchId) {
     setLoading(true);
     setError(null);
     try {
-      const data = await ProductService.fetchAllData(branchId);
-      setProducts(data.products);
-      setCategories(data.categories);
-      setSuppliers(data.suppliers);
+      const [rawProducts, rawCategories, rawSuppliers] = await Promise.all([
+        getAllProducts(branchId),
+        getAllCategories(),
+        getAllSuppliers()
+      ]);
+      setProducts(rawProducts.map(mapToProductEntity));
+      setCategories(rawCategories);
+      setSuppliers(rawSuppliers);
     } catch (err) {
       setError(err.message);
       console.error("Error fetching products:", err);
@@ -37,7 +42,13 @@ export function useProducts(branchId) {
 
   const saveProduct = async (id, formData) => {
     try {
-      await ProductService.saveProduct(id, formData, branchId);
+      const payload = mapFromProductForm(formData);
+      if (id) {
+        delete payload.DATE_STOCK_IN;
+        await updateProduct(id, payload);
+      } else {
+        await createProduct(payload, branchId);
+      }
       
       await logAction({
         action: id ? 'Updated Product' : 'Added Product',
@@ -52,9 +63,9 @@ export function useProducts(branchId) {
     }
   };
 
-  const deleteProduct = async (id, productData) => {
+  const deleteProductHook = async (id, productData) => {
     try {
-      const result = await ProductService.deleteProduct(id);
+      const result = await deleteProduct(id);
       
       if (productData) {
         await logAction({
@@ -79,7 +90,7 @@ export function useProducts(branchId) {
     error,
     fetchProducts,
     saveProduct,
-    deleteProduct
+    deleteProduct: deleteProductHook
   };
 }
 
