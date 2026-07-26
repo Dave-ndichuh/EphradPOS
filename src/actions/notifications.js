@@ -2,10 +2,11 @@
 
 import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function getUnsettledCredits() {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) return { success: true, data: [] }; // Don't crash, just return empty
 
     const unsettledCredits = await prisma.transaction.findMany({

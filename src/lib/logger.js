@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 /**
  * Logs an action to the system_logs table
@@ -17,7 +18,7 @@ export async function logAction({ action, details, severity = 'info', employeeId
     // If neither employeeId nor userEmail is provided, try to fetch the current user session
     if (!employeeId && !userEmail) {
       try {
-        const session = await getServerSession();
+        const session = await getServerSession(authOptions);
         if (session?.user?.email) {
           userEmail = session.user.email;
         }

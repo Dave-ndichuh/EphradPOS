@@ -2,10 +2,11 @@
 
 import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function updateAdminEmail(newEmail) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !session.user || !session.user.id) {
       return { success: false, error: 'Unauthorized' };
     }
@@ -40,7 +41,7 @@ export async function updateAdminEmail(newEmail) {
 
 export async function updateAdminPassword(newPassword) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !session.user || !session.user.id) {
       return { success: false, error: 'Unauthorized' };
     }
