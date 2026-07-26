@@ -3,11 +3,10 @@
 import prisma from '@/lib/prisma';
 import { UTApi } from 'uploadthing/server';
 
-const utapi = new UTApi();
-
 // Helper to delete an image via UploadThing
 async function deleteUploadThingImage(imageUrl) {
   if (!imageUrl) return;
+  const utapi = new UTApi();
   try {
     const parts = imageUrl.split('/f/');
     if (parts.length > 1) {
