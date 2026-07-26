@@ -112,10 +112,10 @@ function ProductsContent() {
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Reset to page 1 on search change
+  // Reset to page 1 on search change handled in onChange and effect for filterParam
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterParam]);
+    if (filterParam) setCurrentPage(1);
+  }, [filterParam]);
 
   return (
     <>
@@ -129,7 +129,10 @@ function ProductsContent() {
             className="input" 
             style={{ paddingLeft: '2.5rem' }}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </div>
         
