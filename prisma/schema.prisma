@@ -30,6 +30,7 @@ model branch {
   invoices     invoice[]
   products     product[]
   system_logs  system_logs[]
+  credit_accounts credit_account[]
 }
 
 model job {
@@ -123,6 +124,7 @@ model customer {
   credit_transactions transaction[] @relation("CreditCustomerTransaction")
   services     service[]
   invoices     invoice[]
+  credit_accounts credit_account[]
 }
 
 model transaction_details {
@@ -228,4 +230,17 @@ model system_logs {
   IP_ADDRESS  String?  @db.VarChar(50)
   BRANCH_ID   Int?
   branch      branch?  @relation(fields: [BRANCH_ID], references: [BRANCH_ID])
+}
+
+model credit_account {
+  ID              Int       @id @default(autoincrement())
+  CUSTOMER_ID     Int?
+  CREDIT_LIMIT    Decimal?  @db.Decimal
+  CURRENT_BALANCE Decimal?  @default(0) @db.Decimal
+  STATUS          String?   @default("active") @db.VarChar(50)
+  BRANCH_ID       Int?
+  CREATED_AT      DateTime? @default(now())
+  UPDATED_AT      DateTime? @updatedAt
+  customer        customer? @relation(fields: [CUSTOMER_ID], references: [CUST_ID])
+  branch          branch?   @relation(fields: [BRANCH_ID], references: [BRANCH_ID])
 }
